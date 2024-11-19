@@ -1,5 +1,6 @@
 %{
   #include <stdio.h>  
+  #include <string.h>
 %}
 
 %%
@@ -52,10 +53,24 @@
    int yywrap (void) {return 1;}
 #endif
 
-int main(int arcg, char *argv[])
+int main(int argc, char *argv[])
 { 
+  // This value will be changed once we add the yacc file input
+  if (argc != 2) {
+    printf("Wrong execution! Please provide a source code file and nothing more.\n");
+    return 1;
+  }
 
-  yyin = fopen(argv[1], "r");
+  char* input_file = argv[1]; 
+  
+  char* extension = strrchr(input_file,'.');
+
+  int ext_len = strlen(input_file) - (extension - input_file + 1);
+  printf("Ext len: %d\n", ext_len);
+
+  printf("Location: %d\n", extension - input_file + 1);
+
+  yyin = fopen(input_file, "r");
 
   yylex();  
 
