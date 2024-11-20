@@ -1,0 +1,37 @@
+int[] ordenar(int[] numeros){
+	if (numeros.length() < 2){
+		return numeros;
+	}
+
+	int pivo = numeros[numeros.length() -1];
+	int[] direita = [];
+	int[] esquerda = [];
+
+	int j = -1;
+	int k = 0;
+	pivoIndex = null;
+
+	while(k < numeros.length()){
+		if(numeros[k] <= pivo){
+			j += 1;
+			int temp = numeros[j];
+			numeros[j] = numeros[k];
+			numeros[k] = temp;
+
+			if(k =? numeros.length() - 1){
+				pivoIndex = j;
+			}
+		}
+		k += 1;
+
+	}
+	int[] pivoList = [pivot];
+	return ordenar(esquerda) + pivoList + ordenar(direita);
+
+}
+
+
+main(){
+	int[] desordenados = [22, 35, 2, 67, 2, 32, 87, 3, 3, 12, 1, 7, 2];
+
+}
