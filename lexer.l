@@ -53,6 +53,23 @@
    int yywrap (void) {return 1;}
 #endif
 
+#define EXTENSION "elmr" 
+
+char* get_extension(char* pointer, int len)
+{
+  char* substring = malloc(len + 1);;
+  int i = 0;
+  
+  while (i < len) {
+    substring[i] = *pointer++;
+    i++;
+  }
+
+  substring[len] = '\0';
+
+  return substring;
+}
+
 int main(int argc, char *argv[])
 { 
   // This value will be changed once we add the yacc file input
@@ -62,13 +79,20 @@ int main(int argc, char *argv[])
   }
 
   char* input_file = argv[1]; 
+
+  char* ext_pointer = strrchr(input_file, '.');
   
-  char* extension = strrchr(input_file,'.');
+  int ext_len = strlen(input_file) - (ext_pointer - input_file + 1);
 
-  int ext_len = strlen(input_file) - (extension - input_file + 1);
-  printf("Ext len: %d\n", ext_len);
+  char* ext = get_extension(ext_pointer+1, ext_len);
 
-  printf("Location: %d\n", extension - input_file + 1);
+  if (strcmp(ext, EXTENSION) != 0) { 
+    printf("Invalid source file!\n");
+    free(ext);
+    return 1;
+  }
+
+  free(ext);
 
   yyin = fopen(input_file, "r");
 
