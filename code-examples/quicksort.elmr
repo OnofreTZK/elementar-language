@@ -9,7 +9,7 @@ int[] ordenar(int[] numeros){
 
 	int j = -1;
 	int k = 0;
-	pivoIndex = null;
+	int pivoIndex = null;
 
 	while(k < numeros.length()){
 		if(numeros[k] <= pivo){
