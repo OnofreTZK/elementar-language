@@ -1,5 +1,6 @@
 %{
   #include <stdio.h>  
+  #include <string.h>
 %}
 
 %%
@@ -52,10 +53,48 @@
    int yywrap (void) {return 1;}
 #endif
 
-int main(int arcg, char *argv[])
-{ 
+#define EXTENSION "elmr" 
 
-  yyin = fopen(argv[1], "r");
+char* get_extension(char* pointer, int len)
+{
+  char* substring = malloc(len + 1);;
+  int i = 0;
+  
+  while (i < len) {
+    substring[i] = *pointer++;
+    i++;
+  }
+
+  substring[len] = '\0';
+
+  return substring;
+}
+
+int main(int argc, char *argv[])
+{ 
+  // This value will be changed once we add the yacc file input
+  if (argc != 2) {
+    printf("Wrong execution! Please provide a source code file and nothing more.\n");
+    return 1;
+  }
+
+  char* input_file = argv[1]; 
+
+  char* ext_pointer = strrchr(input_file, '.');
+  
+  int ext_len = strlen(input_file) - (ext_pointer - input_file + 1);
+
+  char* ext = get_extension(ext_pointer+1, ext_len);
+
+  if (strcmp(ext, EXTENSION) != 0) { 
+    printf("Invalid source file!\n");
+    free(ext);
+    return 1;
+  }
+
+  free(ext);
+
+  yyin = fopen(input_file, "r");
 
   yylex();  
 
