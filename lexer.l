@@ -19,6 +19,11 @@
 "return"                {printf("RETURN\n");}
 "main"                  {printf("MAIN\n");}
 "print"                 {printf("PRINT\n");}
+"switch"                {printf("SWITCH\n");}
+"for"                   {printf("FOR\n");}
+"case"                  {printf("CASE\n");}
+"break"                 {printf("BREAK\n");}
+"continue"              {printf("CONTINUE\n");}
 "{"                     {printf("BLOCK_BEGIN\n");}         
 "}"                     {printf("BLOCK_END\n");}
 "("                     {printf("PAREN_OPEN\n");}          
@@ -28,6 +33,7 @@
 ";"                     {printf("SEMICOLON\n");}
 ","                     {printf("COMMA\n");}
 "."                     {printf("DOT\n");}
+":"                     {printf("COLON\n");}  
 "=?"                    {printf("EQUALS\n");}  
 "="                     {printf("ASSIGN\n");}                          
 "<"                     {printf("LESS_THAN\n");}          
@@ -35,6 +41,8 @@
 ">"                     {printf("GREATER_THAN\n");}
 ">="                    {printf("GREATER_EQUAL\n");}
 "!="                    {printf("NOT_EQUAL\n");}
+"\+\+"                  {printf("INCREMENT\n");}         
+"--"                    {printf("DECREMENT\n");}
 "\+"                    {printf("PLUS\n");}                
 "-"                     {printf("MINUS\n");}
 "\*"                    {printf("MULTIPLY\n");}

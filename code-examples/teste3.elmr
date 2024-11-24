@@ -1,0 +1,15 @@
+int main() {
+  int x = 0;
+  for (int i = 0; i < 10; i++) {
+    print("Value: ", i);
+    if (x == i) {
+      continue;
+    } else {
+      x++;
+    }
+    switch (i) {
+      case 5:
+        break;
+    }
+  }
+}
