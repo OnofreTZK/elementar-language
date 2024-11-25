@@ -1,0 +1,4 @@
+// This should be ignored by our language
+/* This should be ignored by our language */
+string teste;
+teste = "teste"; 

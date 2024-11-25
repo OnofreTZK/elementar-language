@@ -7,6 +7,8 @@
 %%
 
 [ \t\n]+                ;                              
+"//".*                  ;
+"/*"[^*]*\*+([^/*][^*]*\*+)*"/" ;
 "int"                   {printf("TYPE_INT\n");}            
 "void"                  {printf("TYPE_VOID\n");}
 "const"                 {printf("CONST\n");}
@@ -51,7 +53,6 @@
 "&&"                    {printf("AND\n");}                 
 "\|\|"                  {printf("OR\n");}
 "!"                     {printf("NOT\n");}
-"//".*                  {printf("COMMENT_LINE\n");}   
 \"([^\"\\]|\\.)*\"      {printf("STRING_LITERAL(%s)\n", yytext);}
 \'([^\\\']|\\.)\'       {printf("CHAR_LITERAL(%s)\n", yytext);}   
 [0-9]+                  {printf("NUMBER(%s)\n", yytext);}      
