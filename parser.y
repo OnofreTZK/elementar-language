@@ -26,18 +26,141 @@ PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT
 
 %start prog
 
-%type <sValue> stm
+%type <sValue> logic_expression logical_term logical_factor
+%type <sValue> comparison_operator unary_operator assignment_operator
+%type <sValue> expression first_level_expression second_level_expression third_level_expression primary_expression
+%type <sValue> statement block_statement if_statement while_statement for_statement return_statement
+%type <sValue> declaration assignment simple_assignment unary_assignment
+%type <sValue> type value
 
 %%
-prog : stmlist {} 
-	 ;
+/* Símbolo inicial */
+program: statement_list                     {printf("programa")}
+       ;
 
-stm : ID ASSIGN ID {printf("%s <- %s \n",$1, $3);}
+statement_list: statement               
+              | statement_list statement   {printf("statement_list")}
+              ;
+
+statement: declaration  
+         | assignment   
+         | if_statement
+         | while_statement
+         | for_statement
+         | return_statement
+         | block_statement
+         | expression SEMICOLON
+         | SEMICOLON
+         ;
+
+block_statement: BLOCK_BEGIN statement_list BLOCK_END  {printf("block statement")}
+               ;
+
+if_statement: IF PAREN_OPEN logic_expression PAREN_CLOSE block_statement
+            | IF PAREN_OPEN logic_expression PAREN_CLOSE block_statement ELSE block_statement
+            ;
+
+return_statement: RETURN expression SEMICOLON
+                ;
+
+logic_expression: logical_term
+                | logic_expression LOGICAL_OR logical_term
+                ;
+
+logical_term: logical_factor
+            | logical_term LOGICAL_AND logical_factor
+            ;
+
+logical_factor: comparison_expression
+              | NOT logical_factor
+              ;
+
+comparison_expression: value comparison_operator value           {printf("comparison expression")}
+                     ;
+
+comparison_operator: EQUALS
+                   | NOT_EQUAL
+                   | LESS_THAN
+                   | LESS_EQUAL
+                   | GREATER_THAN
+                   | GREATER_EQUAL
+                   ;
+
+while_statement: WHILE PAREN_OPEN logic_expression PAREN_CLOSE block_statement
+               ;
+
+for_statement: FOR PAREN_OPEN assignment SEMICOLON expression SEMICOLON assignment PAREN_CLOSE block_statement
+             ;
+
+declaration: type ID SEMICOLON
+           | CONST type ID SEMICOLON
+           | type FUNCTION ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement
+           ;
+
+assignment: simple_assignment
+          | unary_assignment
+          ;
+
+simple_assignment: ID assignment_operator expression
+                 ;
+
+unary_assignment: ID unary_operator
+                | unary_operator ID
+                ;
+
+assignment_operator: ASSIGN
+                   | MULTIPLY ASSIGN
+                   | DIVIDE ASSIGN
+                   | PLUS ASSIGN
+                   | MINUS ASSIGN
+                   ;
+
+unary_operator: INCREMENT
+              | DECREMENT
+              ;
+
+type: TYPE_VOID
+    | TYPE_CHAR
+    | TYPE_SHORT
+    | TYPE_INT
+    | TYPE_LONG
+    | TYPE_FLOAT
+    | TYPE_DOUBLE
+    | TYPE_STRING
+    | TYPE_SIGNED_INT
+    | TYPE_UNSIGNED_INT
+    | TYPE_STRUCT
+    | TYPE_LIST '<' type '>'
     ;
-	
-stmlist : stm						{}
-		| stm	stmlist				{}
-	  ;
+
+value: ID
+     | STRING_LITERAL
+     | NUMBER
+     | CHAR_LITERAL
+     ;
+
+expression: first_level_expression
+          | logic_expression
+          ;
+
+first_level_expression: second_level_expression
+                      | first_level_expression PLUS second_level_expression
+                      | first_level_expression MINUS second_level_expression
+                      ;
+
+second_level_expression: third_level_expression
+                       | second_level_expression MULTIPLY third_level_expression
+                       | second_level_expression DIVIDE third_level_expression
+                       | second_level_expression MODULO third_level_expression
+                       ;
+
+third_level_expression: primary_expression
+                      | primary_expression '^' third_level_expression
+                      ;
+
+primary_expression: value
+                  | PAREN_OPEN expression PAREN_CLOSE
+                  ;
 %%
 
 int yyerror (char *msg) {
