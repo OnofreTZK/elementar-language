@@ -13,11 +13,16 @@
 [ \t\n]+                ;                              
 "//".*                  ;
 "/*"[^*]*\*+([^/*][^*]*\*+)*"/" ;
-"int"                   {return(TYPE_INT);}            
+"int"                   {return(TYPE_INT);} 
+"short"                 {return(TYPE_SHORT);}
+"unsigned_int"          {return(TYPE_UNSIGNED_INT);}           
+"float"                 {return(TYPE_FLOAT);}    
+"double"                {return(TYPE_DOUBLE);}
+"long"                  {return(TYPE_LONG);}
 "void"                  {return(TYPE_VOID);}
 "const"                 {return(CONST);}
 "char"                  {return(TYPE_CHAR);}
-"struct"                {return(STRUCT);}
+"struct"                {return(TYPE_STRUCT);}
 "string"                {return(TYPE_STRING);}
 "if"                    {return(IF);}
 "else"                  {return(ELSE);}

@@ -18,7 +18,8 @@ extern FILE *yyin;
 %token <sValue> ID STRING_LITERAL
 %token <iValue> NUMBER
 %token <cValue> CHAR_LITERAL
-%token TYPE_INT TYPE_VOID CONST TYPE_CHAR STRUCT TYPE_STRING IF ELSE WHILE RETURN MAIN
+%token TYPE_INT TYPE_VOID CONST TYPE_CHAR TYPE_STRUCT TYPE_STRING TYPE_SHORT 
+TYPE_UNSIGNED_INT TYPE_FLOAT TYPE_DOUBLE TYPE_LONG IF ELSE WHILE RETURN MAIN
 PRINT SWITCH FOR CASE BREAK CONTINUE BLOCK_BEGIN BLOCK_END PAREN_OPEN
 PAREN_CLOSE BRACKET_OPEN BRACKET_CLOSE SEMICOLON COMMA DOT COLON EQUALS ASSIGN
 LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL NOT_EQUAL INCREMENT DECREMENT
@@ -56,6 +57,8 @@ statement: declaration
 block_statement: BLOCK_BEGIN statement_list BLOCK_END  {printf("block statement")}
                ;
 
+// Talvez seja isso que está ambiguo. Olhar o exemplo do livro
+
 if_statement: IF PAREN_OPEN logic_expression PAREN_CLOSE block_statement
             | IF PAREN_OPEN logic_expression PAREN_CLOSE block_statement ELSE block_statement
             ;
@@ -64,11 +67,11 @@ return_statement: RETURN expression SEMICOLON
                 ;
 
 logic_expression: logical_term
-                | logic_expression LOGICAL_OR logical_term
+                | logic_expression OR logical_term
                 ;
 
 logical_term: logical_factor
-            | logical_term LOGICAL_AND logical_factor
+            | logical_term AND logical_factor
             ;
 
 logical_factor: comparison_expression
@@ -94,7 +97,7 @@ for_statement: FOR PAREN_OPEN assignment SEMICOLON expression SEMICOLON assignme
 
 declaration: type ID SEMICOLON
            | CONST type ID SEMICOLON
-           | type FUNCTION ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement
+           | type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement
            ;
 
 assignment: simple_assignment
@@ -127,7 +130,6 @@ type: TYPE_VOID
     | TYPE_FLOAT
     | TYPE_DOUBLE
     | TYPE_STRING
-    | TYPE_SIGNED_INT
     | TYPE_UNSIGNED_INT
     | TYPE_STRUCT
     | TYPE_LIST '<' type '>'
