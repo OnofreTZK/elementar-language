@@ -23,9 +23,9 @@ TYPE_UNSIGNED_INT TYPE_FLOAT TYPE_DOUBLE TYPE_LONG IF ELSE WHILE RETURN MAIN
 PRINT SWITCH FOR CASE BREAK CONTINUE BLOCK_BEGIN BLOCK_END PAREN_OPEN
 PAREN_CLOSE BRACKET_OPEN BRACKET_CLOSE SEMICOLON COMMA DOT COLON EQUALS ASSIGN
 LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL NOT_EQUAL INCREMENT DECREMENT
-PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT
+PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT EXPONENT
 
-%start prog
+%start program
 
 %type <sValue> logic_expression logical_term logical_factor
 %type <sValue> comparison_operator unary_operator assignment_operator
@@ -36,11 +36,11 @@ PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT
 
 %%
 /* Símbolo inicial */
-program: statement_list                     {printf("programa")}
+program: statement_list                     {printf("programa");}
        ;
 
 statement_list: statement               
-              | statement_list statement   {printf("statement_list")}
+              | statement_list statement   {printf("statement_list");}
               ;
 
 statement: declaration  
@@ -54,7 +54,7 @@ statement: declaration
          | SEMICOLON
          ;
 
-block_statement: BLOCK_BEGIN statement_list BLOCK_END  {printf("block statement")}
+block_statement: BLOCK_BEGIN statement_list BLOCK_END  {printf("block statement");}
                ;
 
 // Talvez seja isso que está ambiguo. Olhar o exemplo do livro
@@ -78,7 +78,7 @@ logical_factor: comparison_expression
               | NOT logical_factor
               ;
 
-comparison_expression: value comparison_operator value           {printf("comparison expression")}
+comparison_expression: value comparison_operator value           {printf("comparison expression");}
                      ;
 
 comparison_operator: EQUALS
@@ -94,6 +94,10 @@ while_statement: WHILE PAREN_OPEN logic_expression PAREN_CLOSE block_statement
 
 for_statement: FOR PAREN_OPEN assignment SEMICOLON expression SEMICOLON assignment PAREN_CLOSE block_statement
              ;
+
+parameter_list: type ID
+              | parameter_list COMMA type ID
+              ;
 
 declaration: type ID SEMICOLON
            | CONST type ID SEMICOLON
@@ -132,7 +136,7 @@ type: TYPE_VOID
     | TYPE_STRING
     | TYPE_UNSIGNED_INT
     | TYPE_STRUCT
-    | TYPE_LIST '<' type '>'
+    | ID LESS_THAN type GREATER_THAN
     ;
 
 value: ID
@@ -157,7 +161,7 @@ second_level_expression: third_level_expression
                        ;
 
 third_level_expression: primary_expression
-                      | primary_expression '^' third_level_expression
+                      | primary_expression EXPONENT third_level_expression
                       ;
 
 primary_expression: value

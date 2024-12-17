@@ -35,6 +35,7 @@
 "case"                  {return(CASE);}
 "break"                 {return(BREAK);}
 "continue"              {return(CONTINUE);}
+"^"                     {return(EXPONENT);}
 "{"                     {return(BLOCK_BEGIN);}         
 "}"                     {return(BLOCK_END);}
 "("                     {return(PAREN_OPEN);}          
