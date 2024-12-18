@@ -98,7 +98,7 @@ for_statement: FOR PAREN_OPEN assignment SEMICOLON expression SEMICOLON assignme
              ;
 
 parameter_list: type ID
-              | parameter_list COMMA type ID
+              | COMMA parameter_list
               ;
 
 declaration: type ID SEMICOLON
@@ -138,7 +138,7 @@ type: TYPE_VOID
     | TYPE_STRING
     | TYPE_UNSIGNED_INT
     | TYPE_STRUCT
-    | ID LESS_THAN type GREATER_THAN
+    | type BRACKET_OPEN BRACKET_CLOSE
     ;
 
 value: ID
