@@ -5,239 +5,120 @@
 int yylex(void);
 int yyerror(char *s);
 extern int yylineno;
-extern char * yytext;
+extern char *yytext;
 extern FILE *yyin;
 %}
 
 %union {
 	int    iValue; 	/* integer value */
-  float  fValue;  /* float value */
+    float  fValue;  /* float value */
 	char   cValue; 	/* char value */
 	char * sValue;  /* string value */
-	};
+}
 
 %token <sValue> ID STRING_LITERAL
 %token <iValue> INT
 %token <fValue> DECIMAL
 %token <cValue> CHAR_LITERAL
-%token TYPE_INT TYPE_VOID CONST TYPE_CHAR TYPE_STRUCT TYPE_STRING TYPE_SHORT 
-TYPE_UNSIGNED_INT TYPE_FLOAT TYPE_DOUBLE TYPE_LONG IF ELSE WHILE RETURN MAIN
-PRINT SWITCH FOR CASE BREAK CONTINUE BLOCK_BEGIN BLOCK_END PAREN_OPEN
-PAREN_CLOSE BRACKET_OPEN BRACKET_CLOSE SEMICOLON COMMA DOT COLON EQUALS ASSIGN
-LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL NOT_EQUAL INCREMENT DECREMENT
-PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT EXPONENT TRUE FALSE
+%token TYPE_INT TYPE_SHORT TYPE_UNSIGNED_INT TYPE_FLOAT TYPE_DOUBLE TYPE_LONG TYPE_VOID CONST
+%token TYPE_CHAR TYPE_STRUCT TYPE_STRING
+%token IF ELSE WHILE RETURN MAIN PRINT SWITCH FOR CASE BREAK CONTINUE TRUE FALSE
+%token EQUALS ASSIGN LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL NOT_EQUAL INCREMENT DECREMENT
+%token PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT EXPONENT
+%token BLOCK_BEGIN BLOCK_END PAREN_OPEN PAREN_CLOSE BRACKET_OPEN BRACKET_CLOSE SEMICOLON COMMA DOT COLON
 
 %start program
 
-/*
-%type <sValue> logic_expression logical_term logical_factor
-%type <sValue> comparison_operator unary_operator assignment_operator
-%type <sValue> expression first_level_expression second_level_expression third_level_expression primary_expression
-%type <sValue> statement block_statement if_statement while_statement for_statement return_statement
-%type <sValue> declaration assignment simple_assignment unary_assignment
-%type <sValue> type value
-*/
+%left PLUS MINUS
+%left MULTIPLY DIVIDE
+%nonassoc LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL EQUALS NOT_EQUAL
 
 %%
-/* Símbolo inicial */
-program: statement_list                     {printf("programa\n");}
-       ;
+program: main_function;
 
-statement_list: statement                  {printf("statement_list\n");}
-              | statement_list statement   
-              ;
+main_function: TYPE_VOID MAIN PAREN_OPEN PAREN_CLOSE block_statement;
 
-statement: declaration  {printf("statement\n");}
-         | assignment   
+block_statement: BLOCK_BEGIN statement_list BLOCK_END;
+
+statement_list: statement
+              | statement_list statement;
+
+statement: simple_statement SEMICOLON
+         | block_statement
          | if_statement
          | while_statement
-         | for_statement
-         | return_statement
-         | block_statement
-         | expression SEMICOLON
-         | SEMICOLON
-         ;
+         | print_statement SEMICOLON
+         | continue_statement SEMICOLON;
 
-block_statement: BLOCK_BEGIN statement_list BLOCK_END  {printf("block statement");}
-               ;
+simple_statement: declaration
+                | assignment;
 
-if_statement: IF PAREN_OPEN logic_expression PAREN_CLOSE block_statement
-            | IF PAREN_OPEN logic_expression PAREN_CLOSE block_statement ELSE block_statement
-            ;
+declaration: type ID
+           | type ID ASSIGN expression;
 
-return_statement: RETURN expression SEMICOLON
-                ;
+assignment: ID ASSIGN expression;
 
-logic_expression: logical_term
-                | logic_expression OR logical_term
-                ;
+expression: expression PLUS term
+          | expression MINUS term
+          | comparison_expression;
 
-logical_term: logical_factor
-            | logical_term AND logical_factor
-            ;
+comparison_expression: term EQUALS term
+                     | term LESS_THAN term
+                     | term LESS_EQUAL term
+                     | term GREATER_THAN term
+                     | term GREATER_EQUAL term
+                     | term NOT_EQUAL term;
 
-logical_factor: comparison_expression
-              | NOT logical_factor
-              ;
+term: term MULTIPLY factor
+    | term DIVIDE factor
+    | factor;
 
-value: STRING_LITERAL
-       | INT
-       | DECIMAL
-       | TRUE
-       | FALSE
-       | CHAR_LITERAL
-       | ID
-       ;
+factor: PAREN_OPEN expression PAREN_CLOSE
+      | ID
+      | INT
+      | DECIMAL;
 
-comparison_expression: value comparison_operator value          
-                     ;
-
-comparison_operator: EQUALS
-                   | NOT_EQUAL
-                   | LESS_THAN
-                   | LESS_EQUAL
-                   | GREATER_THAN
-                   | GREATER_EQUAL
-                   ;
-
-while_statement: WHILE PAREN_OPEN logic_expression PAREN_CLOSE block_statement
-               ;
-
-for_statement: FOR PAREN_OPEN assignment SEMICOLON expression SEMICOLON assignment PAREN_CLOSE block_statement
-             ;
-
-parameter_list: type ID
-              | COMMA parameter_list
-              ;
-
-declaration: type ID SEMICOLON            {printf("declaration\n");}  
-           | CONST type ID SEMICOLON
-           | type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement
-           ;
-
-assignment: simple_assignment              {printf("assignment\n");}  
-          | unary_assignment
-          ;
-
-simple_assignment: ID ASSIGN expression SEMICOLON {printf("simple assignment\n");}  
-                 ;
-
-//completar com as coisas abaixo
-unary_assignment: ID unary_operator
-                | unary_operator ID
-                ;
-
-/*
-assignment_operator: ASSIGN
-                   | MULTIPLY ASSIGN
-                   | DIVIDE ASSIGN
-                   | PLUS ASSIGN
-                   | MINUS ASSIGN
-                   ;
-*/
-
-unary_operator: INCREMENT
-              | DECREMENT
-              ;
-
-type: TYPE_VOID
-    | TYPE_CHAR
+type: TYPE_INT
     | TYPE_SHORT
-    | TYPE_INT
-    | TYPE_LONG
+    | TYPE_UNSIGNED_INT
     | TYPE_FLOAT
     | TYPE_DOUBLE
-    | TYPE_STRING
-    | TYPE_UNSIGNED_INT
+    | TYPE_LONG
+    | TYPE_VOID
+    | TYPE_CHAR
     | TYPE_STRUCT
-    | type BRACKET_OPEN BRACKET_CLOSE
-    ;
+    | TYPE_STRING;
 
+if_statement: IF PAREN_OPEN expression PAREN_CLOSE block_statement
+            | IF PAREN_OPEN expression PAREN_CLOSE block_statement ELSE block_statement;
 
-expression: first_level_expression
-          | logic_expression
-          ;
+while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement;
 
-first_level_expression: second_level_expression                                   {printf("first level expression\n");}
-                      | first_level_expression PLUS second_level_expression
-                      | first_level_expression MINUS second_level_expression
-                      ;
+print_statement: PRINT PAREN_OPEN expression PAREN_CLOSE;
 
-second_level_expression: third_level_expression                                    {printf("second level expression\n");}
-                       | second_level_expression MULTIPLY third_level_expression
-                       | second_level_expression DIVIDE third_level_expression
-                       | second_level_expression MODULO third_level_expression
-                       ;
+continue_statement: CONTINUE;
 
-third_level_expression: primary_expression                                         {printf("third level expression\n");} 
-                      | primary_expression EXPONENT third_level_expression
-                      ;
-
-primary_expression: value                                                          {printf("primary expression\n");} 
-                  | PAREN_OPEN expression PAREN_CLOSE
-                  ;
 %%
-
-int yyerror (char *msg) {
-	fprintf (stderr, "%d: %s at '%s'\n", yylineno, msg, yytext);
+int yyerror(char *msg) {
+	fprintf(stderr, "%d: %s at '%s'\n", yylineno, msg, yytext);
 	return 0;
 }
 
-#define EXTENSION "elmr" 
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        printf("Usage: %s <source file>\n", argv[0]);
+        return 1;
+    }
 
-char* get_extension(char* pointer, int len)
-{
-  char* substring = malloc(len + 1);
-  int i = 0;
-  
-  while (i < len) {
-    substring[i] = *pointer++;
-    i++;
-  }
+    FILE *file = fopen(argv[1], "r");
+    if (!file) {
+        printf("Error: Cannot open file %s\n", argv[1]);
+        return 1;
+    }
 
-  substring[len] = '\0';
-
-  return substring;
-}
-
-int main(int argc, char *argv[])
-{ 
-  if (argc != 2) {
-    printf("Usage: %s <source file>\n", argv[0]);
-    return 1;
-  }
-
-  char* input_file = argv[1]; 
-
-  char* ext_pointer = strrchr(input_file, '.');
-  
-  if (!ext_pointer) {
-    printf("Invalid source file!\n");
-    return 1;
-  }
-
-  int ext_len = strlen(input_file) - (ext_pointer - input_file + 1);
-
-  char* ext = get_extension(ext_pointer + 1, ext_len);
-
-  if (strcmp(ext, EXTENSION) != 0) { 
-    printf("Invalid source file extension! Expected .%s\n", EXTENSION);
-    free(ext);
-    return 1;
-  }
-
-  free(ext);
-
-  yyin = fopen(input_file, "r");
-  if (!yyin) {
-    printf("Error: Cannot open file %s\n", input_file);
-    return 1;
-  }
-
-  yyparse();  
-
-  fclose(yyin);
-
-  return 0;
+    yyin = file;
+    yyparse();
+    fclose(file);
+    return 0;
 }
 
