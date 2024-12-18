@@ -27,12 +27,14 @@ PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT EXPONENT
 
 %start program
 
+/*
 %type <sValue> logic_expression logical_term logical_factor
 %type <sValue> comparison_operator unary_operator assignment_operator
 %type <sValue> expression first_level_expression second_level_expression third_level_expression primary_expression
 %type <sValue> statement block_statement if_statement while_statement for_statement return_statement
 %type <sValue> declaration assignment simple_assignment unary_assignment
 %type <sValue> type value
+*/
 
 %%
 /* Símbolo inicial */
