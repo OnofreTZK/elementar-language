@@ -11,19 +11,21 @@ extern FILE *yyin;
 
 %union {
 	int    iValue; 	/* integer value */
+  float  fValue;  /* float value */
 	char   cValue; 	/* char value */
 	char * sValue;  /* string value */
 	};
 
 %token <sValue> ID STRING_LITERAL
-%token <iValue> NUMBER
+%token <iValue> INT
+%token <fValue> DECIMAL
 %token <cValue> CHAR_LITERAL
 %token TYPE_INT TYPE_VOID CONST TYPE_CHAR TYPE_STRUCT TYPE_STRING TYPE_SHORT 
 TYPE_UNSIGNED_INT TYPE_FLOAT TYPE_DOUBLE TYPE_LONG IF ELSE WHILE RETURN MAIN
 PRINT SWITCH FOR CASE BREAK CONTINUE BLOCK_BEGIN BLOCK_END PAREN_OPEN
 PAREN_CLOSE BRACKET_OPEN BRACKET_CLOSE SEMICOLON COMMA DOT COLON EQUALS ASSIGN
 LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL NOT_EQUAL INCREMENT DECREMENT
-PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT EXPONENT
+PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT EXPONENT TRUE FALSE
 
 %start program
 
@@ -38,14 +40,14 @@ PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT EXPONENT
 
 %%
 /* Símbolo inicial */
-program: statement_list                     {printf("programa");}
+program: statement_list                     {printf("programa\n");}
        ;
 
-statement_list: statement               
-              | statement_list statement   {printf("statement_list");}
+statement_list: statement                  {printf("statement_list\n");}
+              | statement_list statement   
               ;
 
-statement: declaration  
+statement: declaration  {printf("statement\n");}
          | assignment   
          | if_statement
          | while_statement
@@ -58,8 +60,6 @@ statement: declaration
 
 block_statement: BLOCK_BEGIN statement_list BLOCK_END  {printf("block statement");}
                ;
-
-// Talvez seja isso que está ambiguo. Olhar o exemplo do livro
 
 if_statement: IF PAREN_OPEN logic_expression PAREN_CLOSE block_statement
             | IF PAREN_OPEN logic_expression PAREN_CLOSE block_statement ELSE block_statement
@@ -80,7 +80,16 @@ logical_factor: comparison_expression
               | NOT logical_factor
               ;
 
-comparison_expression: value comparison_operator value           {printf("comparison expression");}
+value: STRING_LITERAL
+       | INT
+       | DECIMAL
+       | TRUE
+       | FALSE
+       | CHAR_LITERAL
+       | ID
+       ;
+
+comparison_expression: value comparison_operator value          
                      ;
 
 comparison_operator: EQUALS
@@ -101,28 +110,31 @@ parameter_list: type ID
               | COMMA parameter_list
               ;
 
-declaration: type ID SEMICOLON
+declaration: type ID SEMICOLON            {printf("declaration\n");}  
            | CONST type ID SEMICOLON
            | type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement
            ;
 
-assignment: simple_assignment
+assignment: simple_assignment              {printf("assignment\n");}  
           | unary_assignment
           ;
 
-simple_assignment: ID assignment_operator expression
+simple_assignment: ID ASSIGN expression SEMICOLON {printf("simple assignment\n");}  
                  ;
 
+//completar com as coisas abaixo
 unary_assignment: ID unary_operator
                 | unary_operator ID
                 ;
 
+/*
 assignment_operator: ASSIGN
                    | MULTIPLY ASSIGN
                    | DIVIDE ASSIGN
                    | PLUS ASSIGN
                    | MINUS ASSIGN
                    ;
+*/
 
 unary_operator: INCREMENT
               | DECREMENT
@@ -141,32 +153,27 @@ type: TYPE_VOID
     | type BRACKET_OPEN BRACKET_CLOSE
     ;
 
-value: ID
-     | STRING_LITERAL
-     | NUMBER
-     | CHAR_LITERAL
-     ;
 
 expression: first_level_expression
           | logic_expression
           ;
 
-first_level_expression: second_level_expression
+first_level_expression: second_level_expression                                   {printf("first level expression\n");}
                       | first_level_expression PLUS second_level_expression
                       | first_level_expression MINUS second_level_expression
                       ;
 
-second_level_expression: third_level_expression
+second_level_expression: third_level_expression                                    {printf("second level expression\n");}
                        | second_level_expression MULTIPLY third_level_expression
                        | second_level_expression DIVIDE third_level_expression
                        | second_level_expression MODULO third_level_expression
                        ;
 
-third_level_expression: primary_expression
+third_level_expression: primary_expression                                         {printf("third level expression\n");} 
                       | primary_expression EXPONENT third_level_expression
                       ;
 
-primary_expression: value
+primary_expression: value                                                          {printf("primary expression\n");} 
                   | PAREN_OPEN expression PAREN_CLOSE
                   ;
 %%

@@ -35,6 +35,8 @@
 "case"                  {return(CASE);}
 "break"                 {return(BREAK);}
 "continue"              {return(CONTINUE);}
+"true"                  {return(TRUE);}
+"false"                 {return(FALSE);}
 "^"                     {return(EXPONENT);}
 "{"                     {return(BLOCK_BEGIN);}         
 "}"                     {return(BLOCK_END);}
@@ -67,8 +69,10 @@
                          return STRING_LITERAL;} 
 \'([^\\\']|\\.)\'       {yylval.cValue = yytext[0];
                          return CHAR_LITERAL;}  
-[0-9]+                  {yylval.iValue = atoi(yytext); 
-                         return NUMBER;}      
+-?[0-9]+                 {yylval.iValue = atoi(yytext); 
+                         return INT;}
+-?[0-9]+\.[0-9]+          {yylval.fValue = atof(yytext); 
+                         return DECIMAL;}
 [a-zA-Z_][a-zA-Z0-9_]*  {yylval.sValue = strdup(yytext);
                          return ID;}      
 .                       {yyerror("Invalid character!");} 

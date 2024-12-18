@@ -1,4 +1,0 @@
-while a do 
-  begin 
-    x := 2 
-  end
