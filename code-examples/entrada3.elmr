@@ -1,3 +1,5 @@
+// Tudo funcionando
+
 int teste = 1;
 float teste2 = 2.0;
 string teste3 = "teste";

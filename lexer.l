@@ -20,6 +20,7 @@
 "double"                {return(TYPE_DOUBLE);}
 "long"                  {return(TYPE_LONG);}
 "void"                  {return(TYPE_VOID);}
+"bool"                  {return(TYPE_BOOL);}
 "const"                 {return(CONST);}
 "char"                  {return(TYPE_CHAR);}
 "struct"                {return(TYPE_STRUCT);}

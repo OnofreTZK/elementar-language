@@ -21,7 +21,7 @@ extern FILE *yyin;
 %token <fValue> DECIMAL
 %token <cValue> CHAR_LITERAL
 %token TYPE_INT TYPE_VOID CONST TYPE_CHAR TYPE_STRUCT TYPE_STRING TYPE_SHORT 
-TYPE_UNSIGNED_INT TYPE_FLOAT TYPE_DOUBLE TYPE_LONG IF ELSE WHILE RETURN MAIN
+TYPE_UNSIGNED_INT TYPE_FLOAT TYPE_DOUBLE TYPE_LONG IF ELSE WHILE RETURN MAIN TYPE_BOOL
 SWITCH FOR CASE BREAK CONTINUE BLOCK_BEGIN BLOCK_END PAREN_OPEN
 PAREN_CLOSE BRACKET_OPEN BRACKET_CLOSE SEMICOLON COMMA DOT EQUALS ASSIGN
 LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL NOT_EQUAL INCREMENT DECREMENT
@@ -87,13 +87,16 @@ logical_factor: comparison_expression
 value: STRING_LITERAL   {printf("value\n");}  
        | INT
        | DECIMAL
-       | TRUE
-       | FALSE
+       | logical_value
        | CHAR_LITERAL
        | ID
        ;
 
-comparison_expression: value comparison_operator value          
+logical_value: TRUE   {printf("logical value\n");}  
+             | FALSE
+             ;
+
+comparison_expression: value comparison_operator value    {printf("comparison_expression\n");}  
                      ;
 
 comparison_operator: EQUALS
@@ -141,19 +144,13 @@ function_assignment: ID ASSIGN function_call SEMICOLON
 simple_assignment: ID ASSIGN expression SEMICOLON {printf("simple assignment\n");}  
                  ;
 
-//completar com as coisas abaixo
 unary_assignment: ID unary_operator
                 | unary_operator ID
+                | MULTIPLY ASSIGN
+                | DIVIDE ASSIGN
+                | PLUS ASSIGN
+                | MINUS ASSIGN
                 ;
-
-/*
-assignment_operator: ASSIGN
-                   | MULTIPLY ASSIGN
-                   | DIVIDE ASSIGN
-                   | PLUS ASSIGN
-                   | MINUS ASSIGN
-                   ;
-*/
 
 unary_operator: INCREMENT
               | DECREMENT
@@ -163,6 +160,7 @@ type: TYPE_VOID
     | TYPE_CHAR
     | TYPE_SHORT
     | TYPE_INT
+    | TYPE_BOOL
     | TYPE_LONG
     | TYPE_FLOAT
     | TYPE_DOUBLE
@@ -178,7 +176,7 @@ expression: first_level_expression
           ;
 
 argument_list: /* Nada */ 
-              |value                                {printf("argument_list\n");}
+              | value                                {printf("argument_list\n");}
               | argument_list COMMA value
 
 function_call: ID PAREN_OPEN argument_list PAREN_CLOSE  {printf("function_call\n");}
