@@ -119,7 +119,7 @@ assignment: simple_assignment              {printf("assignment\n");}
           | unary_assignment
           ;
 
-simple_assignment: ID ASSIGN expression SEMICOLON {printf("simple assignment\n");}  
+simple_assignment: type ID ASSIGN expression SEMICOLON {printf("simple assignment\n");}  
                  ;
 
 //completar com as coisas abaixo
