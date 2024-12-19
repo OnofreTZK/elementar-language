@@ -5,16 +5,16 @@
 int yylex(void);
 int yyerror(char *s);
 extern int yylineno;
-extern char * yytext;
+extern char *yytext;
 extern FILE *yyin;
 %}
 
 %union {
 	int    iValue; 	/* integer value */
-  float  fValue;  /* float value */
+    float  fValue;  /* float value */
 	char   cValue; 	/* char value */
 	char * sValue;  /* string value */
-	};
+};
 
 %token <sValue> ID STRING_LITERAL
 %token <iValue> INT
@@ -56,9 +56,11 @@ statement: declaration  {printf("statement\n");}
          | return_statement
          | block_statement
          | expression SEMICOLON
+         | CONTINUE SEMICOLON               {printf("continue statement\n");}
          | SEMICOLON
          | function_call
          ;
+         
 
 initialization: type ID ASSIGN expression SEMICOLON {printf("initialization\n");}  
 
@@ -107,8 +109,10 @@ comparison_operator: EQUALS
 while_statement: WHILE PAREN_OPEN logic_expression PAREN_CLOSE block_statement
                ;
 
-for_statement: FOR PAREN_OPEN assignment SEMICOLON expression SEMICOLON assignment PAREN_CLOSE block_statement
-             ;
+for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON assignment PAREN_CLOSE block_statement;
+
+for_initializer: declaration
+               | assignment;
 
 
 parameter_list:                             {printf("parameter_list\n");}
@@ -178,10 +182,10 @@ expression: first_level_expression
           ;
 
 argument_list: /* Nada */ 
-              |value                                {printf("argument_list\n");}
-              | argument_list COMMA value
+              | value                                {printf("argument_list\n");}
+              | argument_list COMMA value;
 
-function_call: ID PAREN_OPEN argument_list PAREN_CLOSE  {printf("function_call\n");}
+function_call: ID PAREN_OPEN argument_list PAREN_CLOSE  {printf("function_call\n");};
 
 
 first_level_expression: second_level_expression                                   {printf("first level expression\n");}
@@ -205,8 +209,8 @@ primary_expression: value                                                       
 %%
 
 int yyerror (char *msg) {
-	fprintf (stderr, "%d: %s at '%s'\n", yylineno, msg, yytext);
-	return 0;
+    fprintf(stderr, "Syntax error at line %d: %s at '%s'\n", yylineno, msg, yytext);
+    return 0;
 }
 
 #define EXTENSION "elmr" 

@@ -1,0 +1,36 @@
+int main() {
+    int x = 10;
+    int y = 20;
+
+    if (x < y) {
+        x++;
+    } else {
+        x--;
+    }
+
+    while (x < 15) {
+        x++;
+        if (x =? 13) {
+            continue;
+        }
+    }
+
+    for (int i = 0; i < 5; i++) {
+        if (i =? 3) {
+            break;
+        }
+    }
+
+    switch (x) {
+        case 12:
+            x += 1;
+            break;
+        case 15:
+            x -= 1;
+            break;
+        default:
+            x = 0;
+    }
+
+    return x;
+}

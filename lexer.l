@@ -1,12 +1,12 @@
 %{
   #include "y.tab.h"
-
   #include <stdio.h>  
   #include <string.h>
   #include <stdlib.h>
-
   extern int yyerror (char *msg);
 %}
+
+%option yylineno
 
 %%
 
@@ -67,9 +67,9 @@
                          return STRING_LITERAL;} 
 \'([^\\\']|\\.)\'       {yylval.cValue = yytext[0];
                          return CHAR_LITERAL;}  
--?[0-9]+                 {yylval.iValue = atoi(yytext); 
+-?[0-9]+                {yylval.iValue = atoi(yytext); 
                          return INT;}
--?[0-9]+\.[0-9]+          {yylval.fValue = atof(yytext); 
+-?[0-9]+\.[0-9]+        {yylval.fValue = atof(yytext); 
                          return DECIMAL;}
 [a-zA-Z_][a-zA-Z0-9_]*  {yylval.sValue = strdup(yytext);
                          return ID;}      
@@ -80,3 +80,4 @@
 #ifndef yywrap
    int yywrap (void) {return 1;}
 #endif
+
