@@ -22,8 +22,8 @@ extern FILE *yyin;
 %token <cValue> CHAR_LITERAL
 %token TYPE_INT TYPE_VOID CONST TYPE_CHAR TYPE_STRUCT TYPE_STRING TYPE_SHORT 
 TYPE_UNSIGNED_INT TYPE_FLOAT TYPE_DOUBLE TYPE_LONG IF ELSE WHILE RETURN MAIN
-PRINT SWITCH FOR CASE BREAK CONTINUE BLOCK_BEGIN BLOCK_END PAREN_OPEN
-PAREN_CLOSE BRACKET_OPEN BRACKET_CLOSE SEMICOLON COMMA DOT COLON EQUALS ASSIGN
+SWITCH FOR CASE BREAK CONTINUE BLOCK_BEGIN BLOCK_END PAREN_OPEN
+PAREN_CLOSE BRACKET_OPEN BRACKET_CLOSE SEMICOLON COMMA DOT EQUALS ASSIGN
 LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL NOT_EQUAL INCREMENT DECREMENT
 PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT EXPONENT TRUE FALSE
 
@@ -48,7 +48,8 @@ statement_list: statement                  {printf("statement_list\n");}
               ;
 
 statement: declaration  {printf("statement\n");}
-         | assignment   
+         | assignment
+         | initialization  
          | if_statement
          | while_statement
          | for_statement
@@ -58,7 +59,9 @@ statement: declaration  {printf("statement\n");}
          | SEMICOLON
          ;
 
-block_statement: BLOCK_BEGIN statement_list BLOCK_END  {printf("block statement");}
+initialization: type ID ASSIGN expression SEMICOLON {printf("initialization\n");}  
+
+block_statement: BLOCK_BEGIN statement_list BLOCK_END  {printf("block statement\n");}
                ;
 
 if_statement: IF PAREN_OPEN logic_expression PAREN_CLOSE block_statement
@@ -80,7 +83,7 @@ logical_factor: comparison_expression
               | NOT logical_factor
               ;
 
-value: STRING_LITERAL
+value: STRING_LITERAL   {printf("value\n");}  
        | INT
        | DECIMAL
        | TRUE
@@ -106,20 +109,35 @@ while_statement: WHILE PAREN_OPEN logic_expression PAREN_CLOSE block_statement
 for_statement: FOR PAREN_OPEN assignment SEMICOLON expression SEMICOLON assignment PAREN_CLOSE block_statement
              ;
 
-parameter_list: type ID
-              | COMMA parameter_list
-              ;
+
+parameter_list:                             {printf("parameter_list\n");}
+    /* vazio */                            
+  | parameter                              
+  | parameter_list COMMA parameter        
+  ;
+
+parameter:                                {printf("parameter\n");}
+    type ID
+  ;
+
+main_function: TYPE_INT MAIN PAREN_OPEN PAREN_CLOSE block_statement {printf("main_function\n");}
+
 
 declaration: type ID SEMICOLON            {printf("declaration\n");}  
            | CONST type ID SEMICOLON
+           | main_function
            | type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement
            ;
 
 assignment: simple_assignment              {printf("assignment\n");}  
+          | function_assignment
           | unary_assignment
           ;
 
-simple_assignment: type ID ASSIGN expression SEMICOLON {printf("simple assignment\n");}  
+function_assignment: ID ASSIGN function_call SEMICOLON
+                  ;
+
+simple_assignment: ID ASSIGN expression SEMICOLON {printf("simple assignment\n");}  
                  ;
 
 //completar com as coisas abaixo
@@ -157,6 +175,13 @@ type: TYPE_VOID
 expression: first_level_expression
           | logic_expression
           ;
+
+argument_list: /* Nada */ 
+              |value                                {printf("argument_list\n");}
+              | argument_list COMMA value
+
+function_call: ID PAREN_OPEN argument_list PAREN_CLOSE  {printf("function_call\n");}
+
 
 first_level_expression: second_level_expression                                   {printf("first level expression\n");}
                       | first_level_expression PLUS second_level_expression

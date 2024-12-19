@@ -29,7 +29,6 @@
 "while"                 {return(WHILE);}
 "return"                {return(RETURN);}
 "main"                  {return(MAIN);}
-"print"                 {return(PRINT);}
 "switch"                {return(SWITCH);}
 "for"                   {return(FOR);}
 "case"                  {return(CASE);}
@@ -47,7 +46,6 @@
 ";"                     {return(SEMICOLON);}
 ","                     {return(COMMA);}
 "."                     {return(DOT);}
-":"                     {return(COLON);}  
 "=?"                    {return(EQUALS);}  
 "="                     {return(ASSIGN);}                          
 "<"                     {return(LESS_THAN);}          

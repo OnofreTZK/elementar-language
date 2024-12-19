@@ -1,1 +1,26 @@
-int a = 5;
+//Funcionando
+int b = 10;
+int a;
+a = 20;
+b = a;
+int main(){
+   b++;
+}
+a = teste();
+a = teste(a);
+a = teste(a,b);
+
+//Não Funcionando
+
+//print(a);
+//print("teste)
+//b = funcao();
+//b = funcao(a);
+//b = funcao(a,b);
+//print(teste());
+
+/*
+int main(){
+
+}
+*/
