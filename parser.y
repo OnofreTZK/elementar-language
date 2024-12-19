@@ -11,33 +11,171 @@ extern FILE *yyin;
 
 %union {
 	int    iValue; 	/* integer value */
+  float  fValue;  /* float value */
 	char   cValue; 	/* char value */
 	char * sValue;  /* string value */
 	};
 
 %token <sValue> ID STRING_LITERAL
-%token <iValue> NUMBER
+%token <iValue> INT
+%token <fValue> DECIMAL
 %token <cValue> CHAR_LITERAL
-%token TYPE_INT TYPE_VOID CONST TYPE_CHAR STRUCT TYPE_STRING IF ELSE WHILE RETURN MAIN
+%token TYPE_INT TYPE_VOID CONST TYPE_CHAR TYPE_STRUCT TYPE_STRING TYPE_SHORT 
+TYPE_UNSIGNED_INT TYPE_FLOAT TYPE_DOUBLE TYPE_LONG IF ELSE WHILE RETURN MAIN
 PRINT SWITCH FOR CASE BREAK CONTINUE BLOCK_BEGIN BLOCK_END PAREN_OPEN
 PAREN_CLOSE BRACKET_OPEN BRACKET_CLOSE SEMICOLON COMMA DOT COLON EQUALS ASSIGN
 LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL NOT_EQUAL INCREMENT DECREMENT
-PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT
+PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT EXPONENT TRUE FALSE
 
-%start prog
+%start program
 
-%type <sValue> stm
+/*
+%type <sValue> logic_expression logical_term logical_factor
+%type <sValue> comparison_operator unary_operator assignment_operator
+%type <sValue> expression first_level_expression second_level_expression third_level_expression primary_expression
+%type <sValue> statement block_statement if_statement while_statement for_statement return_statement
+%type <sValue> declaration assignment simple_assignment unary_assignment
+%type <sValue> type value
+*/
 
 %%
-prog : stmlist {} 
-	 ;
+/* Símbolo inicial */
+program: statement_list                     {printf("programa\n");}
+       ;
 
-stm : ID ASSIGN ID {printf("%s <- %s \n",$1, $3);}
+statement_list: statement                  {printf("statement_list\n");}
+              | statement_list statement   
+              ;
+
+statement: declaration  {printf("statement\n");}
+         | assignment   
+         | if_statement
+         | while_statement
+         | for_statement
+         | return_statement
+         | block_statement
+         | expression SEMICOLON
+         | SEMICOLON
+         ;
+
+block_statement: BLOCK_BEGIN statement_list BLOCK_END  {printf("block statement");}
+               ;
+
+if_statement: IF PAREN_OPEN logic_expression PAREN_CLOSE block_statement
+            | IF PAREN_OPEN logic_expression PAREN_CLOSE block_statement ELSE block_statement
+            ;
+
+return_statement: RETURN expression SEMICOLON
+                ;
+
+logic_expression: logical_term
+                | logic_expression OR logical_term
+                ;
+
+logical_term: logical_factor
+            | logical_term AND logical_factor
+            ;
+
+logical_factor: comparison_expression
+              | NOT logical_factor
+              ;
+
+value: STRING_LITERAL
+       | INT
+       | DECIMAL
+       | TRUE
+       | FALSE
+       | CHAR_LITERAL
+       | ID
+       ;
+
+comparison_expression: value comparison_operator value          
+                     ;
+
+comparison_operator: EQUALS
+                   | NOT_EQUAL
+                   | LESS_THAN
+                   | LESS_EQUAL
+                   | GREATER_THAN
+                   | GREATER_EQUAL
+                   ;
+
+while_statement: WHILE PAREN_OPEN logic_expression PAREN_CLOSE block_statement
+               ;
+
+for_statement: FOR PAREN_OPEN assignment SEMICOLON expression SEMICOLON assignment PAREN_CLOSE block_statement
+             ;
+
+parameter_list: type ID
+              | COMMA parameter_list
+              ;
+
+declaration: type ID SEMICOLON            {printf("declaration\n");}  
+           | CONST type ID SEMICOLON
+           | type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement
+           ;
+
+assignment: simple_assignment              {printf("assignment\n");}  
+          | unary_assignment
+          ;
+
+simple_assignment: ID ASSIGN expression SEMICOLON {printf("simple assignment\n");}  
+                 ;
+
+//completar com as coisas abaixo
+unary_assignment: ID unary_operator
+                | unary_operator ID
+                ;
+
+/*
+assignment_operator: ASSIGN
+                   | MULTIPLY ASSIGN
+                   | DIVIDE ASSIGN
+                   | PLUS ASSIGN
+                   | MINUS ASSIGN
+                   ;
+*/
+
+unary_operator: INCREMENT
+              | DECREMENT
+              ;
+
+type: TYPE_VOID
+    | TYPE_CHAR
+    | TYPE_SHORT
+    | TYPE_INT
+    | TYPE_LONG
+    | TYPE_FLOAT
+    | TYPE_DOUBLE
+    | TYPE_STRING
+    | TYPE_UNSIGNED_INT
+    | TYPE_STRUCT
+    | type BRACKET_OPEN BRACKET_CLOSE
     ;
-	
-stmlist : stm						{}
-		| stm	stmlist				{}
-	  ;
+
+
+expression: first_level_expression
+          | logic_expression
+          ;
+
+first_level_expression: second_level_expression                                   {printf("first level expression\n");}
+                      | first_level_expression PLUS second_level_expression
+                      | first_level_expression MINUS second_level_expression
+                      ;
+
+second_level_expression: third_level_expression                                    {printf("second level expression\n");}
+                       | second_level_expression MULTIPLY third_level_expression
+                       | second_level_expression DIVIDE third_level_expression
+                       | second_level_expression MODULO third_level_expression
+                       ;
+
+third_level_expression: primary_expression                                         {printf("third level expression\n");} 
+                      | primary_expression EXPONENT third_level_expression
+                      ;
+
+primary_expression: value                                                          {printf("primary expression\n");} 
+                  | PAREN_OPEN expression PAREN_CLOSE
+                  ;
 %%
 
 int yyerror (char *msg) {

@@ -13,11 +13,16 @@
 [ \t\n]+                ;                              
 "//".*                  ;
 "/*"[^*]*\*+([^/*][^*]*\*+)*"/" ;
-"int"                   {return(TYPE_INT);}            
+"int"                   {return(TYPE_INT);} 
+"short"                 {return(TYPE_SHORT);}
+"unsigned_int"          {return(TYPE_UNSIGNED_INT);}           
+"float"                 {return(TYPE_FLOAT);}    
+"double"                {return(TYPE_DOUBLE);}
+"long"                  {return(TYPE_LONG);}
 "void"                  {return(TYPE_VOID);}
 "const"                 {return(CONST);}
 "char"                  {return(TYPE_CHAR);}
-"struct"                {return(STRUCT);}
+"struct"                {return(TYPE_STRUCT);}
 "string"                {return(TYPE_STRING);}
 "if"                    {return(IF);}
 "else"                  {return(ELSE);}
@@ -30,6 +35,9 @@
 "case"                  {return(CASE);}
 "break"                 {return(BREAK);}
 "continue"              {return(CONTINUE);}
+"true"                  {return(TRUE);}
+"false"                 {return(FALSE);}
+"^"                     {return(EXPONENT);}
 "{"                     {return(BLOCK_BEGIN);}         
 "}"                     {return(BLOCK_END);}
 "("                     {return(PAREN_OPEN);}          
@@ -61,8 +69,10 @@
                          return STRING_LITERAL;} 
 \'([^\\\']|\\.)\'       {yylval.cValue = yytext[0];
                          return CHAR_LITERAL;}  
-[0-9]+                  {yylval.iValue = atoi(yytext); 
-                         return NUMBER;}      
+-?[0-9]+                 {yylval.iValue = atoi(yytext); 
+                         return INT;}
+-?[0-9]+\.[0-9]+          {yylval.fValue = atof(yytext); 
+                         return DECIMAL;}
 [a-zA-Z_][a-zA-Z0-9_]*  {yylval.sValue = strdup(yytext);
                          return ID;}      
 .                       {yyerror("Invalid character!");} 
