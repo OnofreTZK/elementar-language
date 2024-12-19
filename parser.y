@@ -57,6 +57,7 @@ statement: declaration  {printf("statement\n");}
          | block_statement
          | expression SEMICOLON
          | SEMICOLON
+         | function_call
          ;
 
 initialization: type ID ASSIGN expression SEMICOLON {printf("initialization\n");}  
