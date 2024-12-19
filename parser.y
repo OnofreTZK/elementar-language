@@ -47,17 +47,13 @@ statement_list: statement                  {printf("statement_list\n");}
               | statement_list statement   
               ;
 
-statement: declaration  {printf("statement\n");}
-         | assignment
-         | initialization  
-         | if_statement
+statement: if_statement
          | while_statement
          | for_statement
          | return_statement
          | block_statement
          | expression SEMICOLON
          | SEMICOLON
-         | function_call
          ;
 
 initialization: type ID ASSIGN expression SEMICOLON {printf("initialization\n");}  
@@ -65,67 +61,58 @@ initialization: type ID ASSIGN expression SEMICOLON {printf("initialization\n");
 block_statement: BLOCK_BEGIN statement_list BLOCK_END  {printf("block statement\n");}
                ;
 
-if_statement: IF PAREN_OPEN logic_expression PAREN_CLOSE block_statement
-            | IF PAREN_OPEN logic_expression PAREN_CLOSE block_statement ELSE block_statement
+if_statement: IF PAREN_OPEN expression PAREN_CLOSE block_statement
+            | IF PAREN_OPEN expression PAREN_CLOSE block_statement ELSE block_statement
             ;
 
 return_statement: RETURN expression SEMICOLON
                 ;
 
-logic_expression: logical_term
-                | logic_expression OR logical_term
+expression: term
+          | declaration 
+          | initialization
+          | assignment
+          | expression boolean_operator expression 
+          | NOT expression
+          | function_call
+          ;
+
+term: STRING_LITERAL   {printf("value\n");}  
+    | INT
+    | DECIMAL
+    | TRUE
+    | FALSE
+    | CHAR_LITERAL
+    | ID
+    ;
+
+boolean_operator: EQUALS
+                | NOT_EQUAL
+                | LESS_THAN
+                | LESS_EQUAL
+                | GREATER_THAN
+                | GREATER_EQUAL
+                | AND 
+                | OR
                 ;
 
-logical_term: logical_factor
-            | logical_term AND logical_factor
-            ;
-
-logical_factor: comparison_expression
-              | NOT logical_factor
-              ;
-
-value: STRING_LITERAL   {printf("value\n");}  
-       | INT
-       | DECIMAL
-       | logical_value
-       | CHAR_LITERAL
-       | ID
-       ;
-
-logical_value: TRUE   {printf("logical value\n");}  
-             | FALSE
-             ;
-
-comparison_expression: value comparison_operator value    {printf("comparison_expression\n");}  
-                     ;
-
-comparison_operator: EQUALS
-                   | NOT_EQUAL
-                   | LESS_THAN
-                   | LESS_EQUAL
-                   | GREATER_THAN
-                   | GREATER_EQUAL
-                   ;
-
-while_statement: WHILE PAREN_OPEN logic_expression PAREN_CLOSE block_statement
+while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement
                ;
 
 for_statement: FOR PAREN_OPEN assignment SEMICOLON expression SEMICOLON assignment PAREN_CLOSE block_statement
              ;
 
+parameter_list: 
+              | parameter_list_opt
+              ;
 
-parameter_list:                             {printf("parameter_list\n");}
-    /* vazio */                            
-  | parameter                              
-  | parameter_list COMMA parameter        
-  ;
+parameter_list_opt: parameter 
+                  | parameter COMMA parameter_list_opt ;
 
-parameter:                                {printf("parameter\n");}
-    type ID
-  ;
+parameter: type ID                               {printf("parameter\n");}
+         ;
 
 main_function: TYPE_INT MAIN PAREN_OPEN PAREN_CLOSE block_statement {printf("main_function\n");}
-
 
 declaration: type ID SEMICOLON            {printf("declaration\n");}  
            | CONST type ID SEMICOLON
@@ -133,28 +120,16 @@ declaration: type ID SEMICOLON            {printf("declaration\n");}
            | type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement
            ;
 
-assignment: simple_assignment              {printf("assignment\n");}  
-          | function_assignment
-          | unary_assignment
-          ;
+assignment: ID assignment_operator expression SEMICOLON
 
-function_assignment: ID ASSIGN function_call SEMICOLON
-                  ;
-
-simple_assignment: ID ASSIGN expression SEMICOLON {printf("simple assignment\n");}  
-                 ;
-
-unary_assignment: ID unary_operator
-                | unary_operator ID
-                | MULTIPLY ASSIGN
-                | DIVIDE ASSIGN
-                | PLUS ASSIGN
-                | MINUS ASSIGN
-                ;
-
-unary_operator: INCREMENT
-              | DECREMENT
-              ;
+assignment_operator: ASSIGN
+                   | MULTIPLY ASSIGN
+                   | DIVIDE ASSIGN
+                   | PLUS ASSIGN
+                   | MINUS ASSIGN
+                   | DECREMENT ASSIGN
+                   | INCREMENT ASSIGN 
+                   ;
 
 type: TYPE_VOID
     | TYPE_CHAR
@@ -170,36 +145,7 @@ type: TYPE_VOID
     | type BRACKET_OPEN BRACKET_CLOSE
     ;
 
-
-expression: first_level_expression
-          | logic_expression
-          ;
-
-argument_list: /* Nada */ 
-              | value                                {printf("argument_list\n");}
-              | argument_list COMMA value
-
-function_call: ID PAREN_OPEN argument_list PAREN_CLOSE  {printf("function_call\n");}
-
-
-first_level_expression: second_level_expression                                   {printf("first level expression\n");}
-                      | first_level_expression PLUS second_level_expression
-                      | first_level_expression MINUS second_level_expression
-                      ;
-
-second_level_expression: third_level_expression                                    {printf("second level expression\n");}
-                       | second_level_expression MULTIPLY third_level_expression
-                       | second_level_expression DIVIDE third_level_expression
-                       | second_level_expression MODULO third_level_expression
-                       ;
-
-third_level_expression: primary_expression                                         {printf("third level expression\n");} 
-                      | primary_expression EXPONENT third_level_expression
-                      ;
-
-primary_expression: value                                                          {printf("primary expression\n");} 
-                  | PAREN_OPEN expression PAREN_CLOSE
-                  ;
+function_call: ID PAREN_OPEN parameter_list PAREN_CLOSE  {printf("function_call\n");}
 %%
 
 int yyerror (char *msg) {
