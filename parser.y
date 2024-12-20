@@ -55,6 +55,15 @@ statement: if_statement
          | SEMICOLON
          ;
 
+for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for_increment PAREN_CLOSE block_statement;
+
+for_initializer: initialization
+               | assignment;
+
+for_increment: assignment
+             | ID INCREMENT SEMICOLON
+             | ID DECREMENT SEMICOLON;
+
 initialization: type ID ASSIGN expression SEMICOLON;
 
 assignment: ID ASSIGN expression SEMICOLON;
@@ -66,8 +75,6 @@ if_statement: IF PAREN_OPEN expression PAREN_CLOSE block_statement
             ;
 
 while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement;
-
-for_statement: FOR PAREN_OPEN assignment SEMICOLON expression SEMICOLON assignment PAREN_CLOSE block_statement;
 
 return_statement: RETURN expression SEMICOLON;
 
