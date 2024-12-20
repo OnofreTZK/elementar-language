@@ -33,7 +33,6 @@
 "switch"                {return(SWITCH);}
 "for"                   {return(FOR);}
 "case"                  {return(CASE);}
-"default"               {return(DEFAULT);}
 "break"                 {return(BREAK);}
 "continue"              {return(CONTINUE);}
 "true"                  {return(TRUE);}
@@ -65,22 +64,20 @@
 "&&"                    {return(AND);}                 
 "\|\|"                  {return(OR);}
 "!"                     {return(NOT);}
-":"                     {return(COLON);}
 \"([^\"\\]|\\.)*\"      {yylval.sValue = strdup(yytext);
                          return STRING_LITERAL;} 
 \'([^\\\']|\\.)\'       {yylval.cValue = yytext[0];
                          return CHAR_LITERAL;}  
 -?[0-9]+                 {yylval.iValue = atoi(yytext); 
                          return INT;}
--?[0-9]+\.[0-9]+         {yylval.fValue = atof(yytext); 
+-?[0-9]+\.[0-9]+          {yylval.fValue = atof(yytext); 
                          return DECIMAL;}
-[a-zA-Z_][a-zA-Z0-9_]*   {yylval.sValue = strdup(yytext);
+[a-zA-Z_][a-zA-Z0-9_]*  {yylval.sValue = strdup(yytext);
                          return ID;}      
-.                        {yyerror("Invalid character!");} 
+.                       {yyerror("Invalid character!");} 
 
 %%
 
 #ifndef yywrap
    int yywrap (void) {return 1;}
 #endif
-
