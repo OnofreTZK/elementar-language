@@ -54,7 +54,7 @@
 ">"                     {return(GREATER_THAN);}
 ">="                    {return(GREATER_EQUAL);}
 "!="                    {return(NOT_EQUAL);}
-"\+\+"                  {return(INCREMENT);}         
+"++"                    {return(INCREMENT);}         
 "--"                    {return(DECREMENT);}
 "\+"                    {return(PLUS);}                
 "-"                     {return(MINUS);}

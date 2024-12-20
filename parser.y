@@ -58,11 +58,12 @@ statement: if_statement
 for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for_increment PAREN_CLOSE block_statement;
 
 for_initializer: initialization
-               | assignment;
+               | assignment
+               | /* vazio */;
 
-for_increment: assignment
-             | ID INCREMENT SEMICOLON
-             | ID DECREMENT SEMICOLON;
+for_increment: ID INCREMENT
+             | ID DECREMENT
+             | assignment;
 
 initialization: type ID ASSIGN expression SEMICOLON;
 
@@ -97,7 +98,10 @@ arithmetic_expression: arithmetic_expression PLUS arithmetic_expression
                      | unary_expression
                      ;
 
-unary_expression: NOT unary_expression
+unary_expression: INCREMENT unary_expression
+                | DECREMENT unary_expression
+                | primary_expression INCREMENT
+                | primary_expression DECREMENT
                 | primary_expression
                 ;
 
@@ -114,6 +118,7 @@ type: TYPE_INT
     | TYPE_FLOAT
     | TYPE_CHAR
     | TYPE_BOOL
+    | TYPE_STRING
     ;
 
 boolean_operator: EQUALS
