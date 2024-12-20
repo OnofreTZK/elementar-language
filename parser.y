@@ -53,6 +53,7 @@ statement: if_statement
          | assignment
          | expression SEMICOLON
          | SEMICOLON
+         | function_declaration
          ;
 
 for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for_increment PAREN_CLOSE block_statement;
@@ -64,6 +65,15 @@ for_initializer: initialization
 for_increment: ID INCREMENT
              | ID DECREMENT
              | assignment;
+
+parameter_list: /* vazio */
+              | parameter_list_nonempty;
+
+parameter_list_nonempty: type ID
+                       | type ID COMMA parameter_list_nonempty;
+             
+function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement
+                    | type MAIN PAREN_OPEN PAREN_CLOSE block_statement;
 
 initialization: type ID ASSIGN expression SEMICOLON;
 
