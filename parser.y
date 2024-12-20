@@ -1,4 +1,5 @@
 %{
+#define YYDEBUG 1
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,10 +12,10 @@ extern FILE *yyin;
 
 %union {
 	int    iValue; 	/* integer value */
-  float  fValue;  /* float value */
+    float  fValue;  /* float value */
 	char   cValue; 	/* char value */
 	char * sValue;  /* string value */
-	};
+};
 
 %token <sValue> ID STRING_LITERAL
 %token <iValue> INT
@@ -25,66 +26,70 @@ TYPE_UNSIGNED_INT TYPE_FLOAT TYPE_DOUBLE TYPE_LONG IF ELSE WHILE RETURN MAIN TYP
 SWITCH FOR CASE BREAK CONTINUE BLOCK_BEGIN BLOCK_END PAREN_OPEN
 PAREN_CLOSE BRACKET_OPEN BRACKET_CLOSE SEMICOLON COMMA DOT EQUALS ASSIGN
 LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL NOT_EQUAL INCREMENT DECREMENT
-PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT EXPONENT TRUE FALSE
+PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT EXPONENT TRUE FALSE DEFAULT COLON
 
 %start program
 
-/*
-%type <sValue> logic_expression logical_term logical_factor
-%type <sValue> comparison_operator unary_operator assignment_operator
-%type <sValue> expression first_level_expression second_level_expression third_level_expression primary_expression
-%type <sValue> statement block_statement if_statement while_statement for_statement return_statement
-%type <sValue> declaration assignment simple_assignment unary_assignment
-%type <sValue> type value
-*/
+%precedence OR
+%precedence AND
+%precedence EQUALS NOT_EQUAL LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL
+%precedence PLUS MINUS
+%precedence MULTIPLY DIVIDE MODULO
+%right NOT
 
 %%
-/* Símbolo inicial */
-program: statement_list                     {printf("programa\n");}
-       ;
+/* Grammar rules */
+program: statement_list;
 
-statement_list: statement                  {printf("statement_list\n");}
-              | statement_list statement   
-              ;
+statement_list: statement
+              | statement_list statement;
 
 statement: if_statement
          | while_statement
          | for_statement
          | return_statement
          | block_statement
+         | switch_statement
          | expression SEMICOLON
          | SEMICOLON
-         ;
+         | initialization
+         
+         | declaration;
 
-initialization: type ID ASSIGN expression SEMICOLON {printf("initialization\n");}  
+initialization: type ID ASSIGN expression SEMICOLON;
 
-block_statement: BLOCK_BEGIN statement_list BLOCK_END  {printf("block statement\n");}
-               ;
+block_statement: BLOCK_BEGIN statement_list BLOCK_END
+               | BLOCK_BEGIN BLOCK_END;
 
 if_statement: IF PAREN_OPEN expression PAREN_CLOSE block_statement
-            | IF PAREN_OPEN expression PAREN_CLOSE block_statement ELSE block_statement
-            ;
+            | IF PAREN_OPEN expression PAREN_CLOSE block_statement ELSE block_statement;
 
-return_statement: RETURN expression SEMICOLON
-                ;
+return_statement: RETURN expression SEMICOLON;
 
-expression: term
-          | declaration 
-          | initialization
-          | assignment
-          | expression boolean_operator expression 
-          | NOT expression
-          | function_call
-          ;
+switch_statement: SWITCH PAREN_OPEN expression PAREN_CLOSE BLOCK_BEGIN case_list default_clause BLOCK_END;
 
-term: STRING_LITERAL   {printf("value\n");}  
+case_list: case_clause
+         | case_list case_clause;
+
+case_clause: CASE term COLON statement_list BREAK SEMICOLON;
+
+default_clause: DEFAULT COLON statement_list
+              | /* empty */;
+
+expression: simple_expression
+          | simple_expression boolean_operator expression
+          | NOT expression;
+
+simple_expression: term
+                 | function_call;
+
+term: STRING_LITERAL
     | INT
     | DECIMAL
     | TRUE
     | FALSE
     | CHAR_LITERAL
-    | ID
-    ;
+    | ID;
 
 boolean_operator: EQUALS
                 | NOT_EQUAL
@@ -92,44 +97,36 @@ boolean_operator: EQUALS
                 | LESS_EQUAL
                 | GREATER_THAN
                 | GREATER_EQUAL
-                | AND 
-                | OR
-                ;
+                | AND
+                | OR;
 
-while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement
-               ;
+while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement;
 
-for_statement: FOR PAREN_OPEN assignment SEMICOLON expression SEMICOLON assignment PAREN_CLOSE block_statement
-             ;
+for_statement: FOR PAREN_OPEN assignment SEMICOLON expression SEMICOLON assignment PAREN_CLOSE block_statement;
 
 parameter_list: 
-              | parameter_list_opt
-              ;
+              | parameter_list_opt;
 
-parameter_list_opt: parameter 
-                  | parameter COMMA parameter_list_opt ;
+parameter_list_opt: parameter
+                  | parameter COMMA parameter_list_opt;
 
-parameter: type ID                               {printf("parameter\n");}
-         ;
+parameter: type ID;
 
-main_function: TYPE_INT MAIN PAREN_OPEN PAREN_CLOSE block_statement {printf("main_function\n");}
+main_function: TYPE_INT MAIN PAREN_OPEN PAREN_CLOSE block_statement;
 
-declaration: type ID SEMICOLON            {printf("declaration\n");}  
+declaration: type ID SEMICOLON
            | CONST type ID SEMICOLON
            | main_function
-           | type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement
-           ;
+           | type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement;
 
 assignment: ID assignment_operator expression SEMICOLON
+	   | type ID ASSIGN expression SEMICOLON;
 
 assignment_operator: ASSIGN
                    | MULTIPLY ASSIGN
                    | DIVIDE ASSIGN
                    | PLUS ASSIGN
-                   | MINUS ASSIGN
-                   | DECREMENT ASSIGN
-                   | INCREMENT ASSIGN 
-                   ;
+                   | MINUS ASSIGN;
 
 type: TYPE_VOID
     | TYPE_CHAR
@@ -142,10 +139,9 @@ type: TYPE_VOID
     | TYPE_STRING
     | TYPE_UNSIGNED_INT
     | TYPE_STRUCT
-    | type BRACKET_OPEN BRACKET_CLOSE
-    ;
+    | type BRACKET_OPEN BRACKET_CLOSE;
 
-function_call: ID PAREN_OPEN parameter_list PAREN_CLOSE  {printf("function_call\n");}
+function_call: ID PAREN_OPEN parameter_list PAREN_CLOSE;
 %%
 
 int yyerror (char *msg) {
