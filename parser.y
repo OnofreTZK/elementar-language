@@ -49,12 +49,15 @@ statement: if_statement
          | for_statement
          | return_statement
          | block_statement
-         | expression SEMICOLON
          | initialization
+         | assignment
+         | expression SEMICOLON
          | SEMICOLON
          ;
 
 initialization: type ID ASSIGN expression SEMICOLON;
+
+assignment: ID ASSIGN expression SEMICOLON;
 
 block_statement: BLOCK_BEGIN statement_list BLOCK_END;
 
@@ -99,8 +102,6 @@ primary_expression: STRING_LITERAL
                   | CHAR_LITERAL
                   | ID
                   ;
-
-assignment: ID ASSIGN expression SEMICOLON;
 
 type: TYPE_INT
     | TYPE_FLOAT
