@@ -1,0 +1,10 @@
+// Tudo funcionando
+
+int teste = 1;
+float teste2 = 2.0;
+string teste3 = "teste";
+
+if(teste =? 1){
+    teste = 2;
+    teste3 = "teste3";
+}

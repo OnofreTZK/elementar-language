@@ -13,23 +13,31 @@
 [ \t\n]+                ;                              
 "//".*                  ;
 "/*"[^*]*\*+([^/*][^*]*\*+)*"/" ;
-"int"                   {return(TYPE_INT);}            
+"int"                   {return(TYPE_INT);} 
+"short"                 {return(TYPE_SHORT);}
+"unsigned_int"          {return(TYPE_UNSIGNED_INT);}           
+"float"                 {return(TYPE_FLOAT);}    
+"double"                {return(TYPE_DOUBLE);}
+"long"                  {return(TYPE_LONG);}
 "void"                  {return(TYPE_VOID);}
+"bool"                  {return(TYPE_BOOL);}
 "const"                 {return(CONST);}
 "char"                  {return(TYPE_CHAR);}
-"struct"                {return(STRUCT);}
+"struct"                {return(TYPE_STRUCT);}
 "string"                {return(TYPE_STRING);}
 "if"                    {return(IF);}
 "else"                  {return(ELSE);}
 "while"                 {return(WHILE);}
 "return"                {return(RETURN);}
 "main"                  {return(MAIN);}
-"print"                 {return(PRINT);}
 "switch"                {return(SWITCH);}
 "for"                   {return(FOR);}
 "case"                  {return(CASE);}
 "break"                 {return(BREAK);}
 "continue"              {return(CONTINUE);}
+"true"                  {return(TRUE);}
+"false"                 {return(FALSE);}
+"^"                     {return(EXPONENT);}
 "{"                     {return(BLOCK_BEGIN);}         
 "}"                     {return(BLOCK_END);}
 "("                     {return(PAREN_OPEN);}          
@@ -39,7 +47,6 @@
 ";"                     {return(SEMICOLON);}
 ","                     {return(COMMA);}
 "."                     {return(DOT);}
-":"                     {return(COLON);}  
 "=?"                    {return(EQUALS);}  
 "="                     {return(ASSIGN);}                          
 "<"                     {return(LESS_THAN);}          
@@ -61,8 +68,10 @@
                          return STRING_LITERAL;} 
 \'([^\\\']|\\.)\'       {yylval.cValue = yytext[0];
                          return CHAR_LITERAL;}  
-[0-9]+                  {yylval.iValue = atoi(yytext); 
-                         return NUMBER;}      
+-?[0-9]+                 {yylval.iValue = atoi(yytext); 
+                         return INT;}
+-?[0-9]+\.[0-9]+          {yylval.fValue = atof(yytext); 
+                         return DECIMAL;}
 [a-zA-Z_][a-zA-Z0-9_]*  {yylval.sValue = strdup(yytext);
                          return ID;}      
 .                       {yyerror("Invalid character!");} 

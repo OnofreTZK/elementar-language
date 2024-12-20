@@ -1,0 +1,48 @@
+//Funcionando
+int b = 10;
+int a;
+a = 20;
+b = a;
+bool c = true;
+int main(){
+    b++;
+    print(a);
+    a = teste();
+    a = teste();
+    a = teste(a);
+    a = teste(a,b);
+    print("Hello World");
+
+    if(a =? 10){
+        print("aaaa");
+    }
+
+    if(true =? true){
+        a++;
+    }
+    
+    if(c =? true){
+        print("c é true");
+    }
+
+    
+}
+
+
+//Não Funcionando
+
+/*
+if(true){
+    a++;
+}
+
+if(c){
+    a++;
+}
+
+for(int i = 0; i < 10; i++){
+    print(i);
+}
+
+
+*/
