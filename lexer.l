@@ -29,7 +29,7 @@
 "else"                  {return(ELSE);}
 "while"                 {return(WHILE);}
 "return"                {return(RETURN);}
-"main"                  {return(MAIN);}
+main                    {return(MAIN);}
 "switch"                {return(SWITCH);}
 "for"                   {return(FOR);}
 "case"                  {return(CASE);}

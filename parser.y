@@ -29,13 +29,9 @@ extern FILE *yyin;
 
 %start program
 
-%left OR
-%left AND
+%left OR AND PLUS MINUS MULTIPLY DIVIDE MODULO
+%right NOT ASSIGN INCREMENT DECREMENT
 %nonassoc EQUALS NOT_EQUAL LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL
-%left PLUS MINUS
-%left MULTIPLY DIVIDE MODULO
-%right NOT
-%right ASSIGN
 
 %%
 program: statement_list;
@@ -44,40 +40,95 @@ statement_list: statement
               | statement_list statement
               ;
 
-statement: if_statement
+type: TYPE_INT
+    | TYPE_FLOAT
+    | TYPE_CHAR
+    | TYPE_BOOL
+    | TYPE_STRING
+    ;
+
+boolean_operator: OR
+                | AND
+
+relational_operator: EQUALS 
+                   | NOT_EQUAL
+                   | LESS_THAN
+                   | LESS_EQUAL
+                   | GREATER_THAN
+                   | GREATER_EQUAL
+                   ;
+
+arithmetic_operator: PLUS 
+                   | MINUS 
+                   | MULTIPLY 
+                   | DIVIDE 
+                   | MODULO
+
+statement: declaration
+         | initialization
+         | assignment
+         | main
+         | if_statement
          | while_statement
          | for_statement
          | return_statement
          | block_statement
-         | initialization
-         | assignment
-         | expression SEMICOLON
-         | SEMICOLON
          | function_declaration
+         | expression SEMICOLON
          ;
+
+term: STRING_LITERAL
+    | INT
+    | DECIMAL
+    | TRUE
+    | FALSE
+    | CHAR_LITERAL
+    | ID                 {printf("Term\n");}
+
+declaration: type ID SEMICOLON  {printf("VAR Declaration\n");}
+
+initialization: type ID ASSIGN expression SEMICOLON  {printf("VAR Initialization\n");}
+
+assignment: ID ASSIGN expression SEMICOLON  {printf("VAR Assignment\n");}
+
+unary_expression: term 
+                | term INCREMENT 
+                | term DECREMENT 
+                | INCREMENT unary_expression
+                | DECREMENT unary_expression
+
+arithmetic_expression: unary_expression
+                     | arithmetic_expression arithmetic_operator unary_expression
+
+relational_expression: arithmetic_expression 
+                     | relational_expression relational_operator arithmetic_expression
+
+boolean_expression: relational_expression 
+                  | boolean_expression boolean_operator relational_expression
+                  | NOT boolean_expression
+
+expression: PAREN_OPEN expression PAREN_CLOSE
+          | boolean_expression
+          ;
+main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement   {printf("Main function\n");}
 
 for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for_increment PAREN_CLOSE block_statement;
 
-for_initializer: initialization
+for_initializer: /* epsilon */
+               | initialization
                | assignment
-               | /* vazio */;
 
 for_increment: ID INCREMENT
              | ID DECREMENT
              | assignment;
 
-parameter_list: /* vazio */
+parameter_list: /* epsilon */
               | parameter_list_nonempty;
 
 parameter_list_nonempty: type ID
                        | type ID COMMA parameter_list_nonempty;
              
 function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement
-                    | type MAIN PAREN_OPEN PAREN_CLOSE block_statement;
-
-initialization: type ID ASSIGN expression SEMICOLON;
-
-assignment: ID ASSIGN expression SEMICOLON;
 
 block_statement: BLOCK_BEGIN statement_list BLOCK_END;
 
@@ -89,55 +140,6 @@ while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement;
 
 return_statement: RETURN expression SEMICOLON;
 
-expression: logic_expression;
-
-logic_expression: logic_expression OR comparison_expression
-                | logic_expression AND comparison_expression
-                | comparison_expression
-                ;
-
-comparison_expression: comparison_expression boolean_operator arithmetic_expression
-                     | arithmetic_expression
-                     ;
-
-arithmetic_expression: arithmetic_expression PLUS arithmetic_expression
-                     | arithmetic_expression MINUS arithmetic_expression
-                     | arithmetic_expression MULTIPLY arithmetic_expression
-                     | arithmetic_expression DIVIDE arithmetic_expression
-                     | arithmetic_expression MODULO arithmetic_expression
-                     | unary_expression
-                     ;
-
-unary_expression: INCREMENT unary_expression
-                | DECREMENT unary_expression
-                | primary_expression INCREMENT
-                | primary_expression DECREMENT
-                | primary_expression
-                ;
-
-primary_expression: STRING_LITERAL
-                  | INT
-                  | DECIMAL
-                  | TRUE
-                  | FALSE
-                  | CHAR_LITERAL
-                  | ID
-                  ;
-
-type: TYPE_INT
-    | TYPE_FLOAT
-    | TYPE_CHAR
-    | TYPE_BOOL
-    | TYPE_STRING
-    ;
-
-boolean_operator: EQUALS
-                | NOT_EQUAL
-                | LESS_THAN
-                | LESS_EQUAL
-                | GREATER_THAN
-                | GREATER_EQUAL
-                ;
 %%
 
 int yyerror(char *msg) {
