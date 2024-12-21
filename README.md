@@ -23,23 +23,19 @@ O analisador é definido por expressões regulares que associam padrões a token
 
 ## Compilação e execução 
 
-Certifique-se de ter o **Flex** instalado no computador.
+Certifique-se de ter o `flex` e o `bison` instalados no computador.
 
-Após compilar o analisador léxico, executamos com um código da linguagem para gerar os tokens.
-
+Gere o executável do compilador e execute com um código:
 
 ```bash
-flex lexer.l
+# Compilação
+make build_compiler
 
-gcc lex.yy.c -o lexer.exe
-
-./lexer.exe ./code-examples/quicksort.elmr
-
+# Execução
+./compiler <nome_arquivo>.elmr
 ```
 
-## Exemplo
-
-### Entrada
+## Exemplo de entrada
 
 ```c
 int main() {
@@ -48,34 +44,4 @@ int main() {
         print("Hello, World!");
     }
 }
-```
-
-### Saída corrrespondente
-
-```
-TYPE_INT
-MAIN
-PAREN_OPEN
-PAREN_CLOSE
-BLOCK_BEGIN
-TYPE_INT
-ID(x)
-ASSIGN
-NUMBER(10)
-SEMICOLON
-IF
-PAREN_OPEN
-ID(x)
-GREATER_THAN
-NUMBER(5)
-PAREN_CLOSE
-BLOCK_BEGIN
-PRINT
-PAREN_OPEN
-STRING_LITERAL("Hello, World!")
-PAREN_CLOSE
-SEMICOLON
-BLOCK_END
-BLOCK_END
-
 ```
