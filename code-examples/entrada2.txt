@@ -1,6 +1,0 @@
-int teste = 1;
-
-if(teste =? 1){
-    teste = 2;
-    print(teste);
-}
