@@ -75,6 +75,7 @@ statement: declaration
          | block_statement
          | function_declaration
          | expression SEMICOLON
+         | SEMICOLON
          ;
 
 term: STRING_LITERAL
@@ -109,16 +110,17 @@ boolean_expression: relational_expression
 
 expression: PAREN_OPEN expression PAREN_CLOSE
           | boolean_expression
+          | function_call
           ;
 main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement   {printf("Main function\n");}
 
 for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for_increment PAREN_CLOSE block_statement;
 
-for_initializer: /* epsilon */
+for_initializer: /* epsilon */       {printf("for_initializer\n");}
                | initialization
                | assignment
 
-for_increment: ID INCREMENT
+for_increment: ID INCREMENT         {printf("for_increment\n");}
              | ID DECREMENT
              | assignment;
 
@@ -129,6 +131,17 @@ parameter_list_nonempty: type ID
                        | type ID COMMA parameter_list_nonempty;
              
 function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement
+
+
+argument_list: /* epsilon */                                {printf("argument_list\n");}
+            | argument_list_nonempty;
+
+argument_list_nonempty: term                                {printf("argument_list_nonempty\n");}
+                      |term COMMA argument_list_nonempty 
+
+
+function_call: ID PAREN_OPEN argument_list PAREN_CLOSE      {printf("function_call\n");}
+
 
 block_statement: BLOCK_BEGIN statement_list BLOCK_END;
 
