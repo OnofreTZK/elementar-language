@@ -49,6 +49,7 @@ type: TYPE_INT
 
 boolean_operator: OR
                 | AND
+                ;
 
 relational_operator: EQUALS 
                    | NOT_EQUAL
@@ -63,6 +64,7 @@ arithmetic_operator: PLUS
                    | MULTIPLY 
                    | DIVIDE 
                    | MODULO
+                   ;
 
 statement: declaration
          | initialization
@@ -83,50 +85,60 @@ term: STRING_LITERAL
     | TRUE
     | FALSE
     | CHAR_LITERAL
-    | ID                 {printf("Term\n");}
+    | ID 
+    ;                {printf("ID\n");}
 
-declaration: type ID SEMICOLON  {printf("VAR Declaration\n");}
+declaration: type ID SEMICOLON;  {printf("VAR Declaration\n");}
 
-initialization: type ID ASSIGN expression SEMICOLON  {printf("VAR Initialization\n");}
+initialization: type ID ASSIGN expression SEMICOLON;  {printf("VAR Initialization\n");}
 
-assignment: ID ASSIGN expression SEMICOLON  {printf("VAR Assignment\n");}
+assignment: ID ASSIGN expression SEMICOLON;  {printf("VAR Assignment\n");}
 
-unary_expression: term 
-                | term INCREMENT 
+unary_expression: term              {printf("unary_expression\n");}
+                | term INCREMENT //Por que term?
                 | term DECREMENT 
                 | INCREMENT unary_expression
                 | DECREMENT unary_expression
+                ;
 
-arithmetic_expression: unary_expression
+arithmetic_expression: unary_expression         {printf("arithmetic_expression\n");}
                      | arithmetic_expression arithmetic_operator unary_expression
+                     ;
 
-relational_expression: arithmetic_expression 
+relational_expression: arithmetic_expression    {printf("relational_expression\n");}
                      | relational_expression relational_operator arithmetic_expression
+                     ;
 
-boolean_expression: relational_expression 
+boolean_expression: relational_expression       {printf("boolean_expression\n");}
                   | boolean_expression boolean_operator relational_expression
                   | NOT boolean_expression
+                  ;
 
-expression: PAREN_OPEN expression PAREN_CLOSE
-          | boolean_expression
+expression: PAREN_OPEN expression PAREN_CLOSE       {printf("expression\n");}  
+          | boolean_expression                      {printf("boolean expression\n");} 
           ;
+
 main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement   {printf("Main function\n");}
 
 for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for_increment PAREN_CLOSE block_statement;
 
-for_initializer: /* epsilon */
+for_initializer: /* epsilon */      {printf("for_initializer\n");}
                | initialization
                | assignment
+               ;
 
-for_increment: ID INCREMENT
+for_increment: ID INCREMENT         {printf("for_increment\n");}
              | ID DECREMENT
-             | assignment;
+             | assignment
+             ;
 
 parameter_list: /* epsilon */
-              | parameter_list_nonempty;
+              | parameter_list_nonempty
+              ;
 
 parameter_list_nonempty: type ID
-                       | type ID COMMA parameter_list_nonempty;
+                       | type ID COMMA parameter_list_nonempty
+                       ;
              
 function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement
 
