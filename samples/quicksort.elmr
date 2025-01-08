@@ -1,7 +1,7 @@
 int[] ordenar(int[] numeros){
 	if (numeros.length() < 2){
 		return numeros;
-	}
+	};
 
 	int pivo = numeros[numeros.length() -1];
 	int[] direita = [];
@@ -20,11 +20,11 @@ int[] ordenar(int[] numeros){
 
 			if(k =? numeros.length() - 1){
 				pivoIndex = j;
-			}
-		}
+			};
+		};
 		k += 1;
 
-	}
+	};
 	int[] pivoList = [pivot];
 	return ordenar(esquerda) + pivoList + ordenar(direita);
 

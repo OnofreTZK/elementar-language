@@ -34,9 +34,9 @@ extern FILE *yyin;
 %nonassoc EQUALS NOT_EQUAL LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL
 
 %%
-program: statement_list;
+program: statement_list SEMICOLON;
 
-statement_list: statement SEMICOLON 
+statement_list: statement
               | statement_list SEMICOLON statement
               ;
 
@@ -161,7 +161,8 @@ argument_list_nonempty: term                                {printf("argument_li
 function_call: ID PAREN_OPEN argument_list PAREN_CLOSE      {printf("function_call\n");}
 
 
-block_statement: BLOCK_BEGIN statement_list BLOCK_END;
+block_statement: BLOCK_BEGIN statement_list SEMICOLON BLOCK_END;
+                
 
 if_statement: IF PAREN_OPEN expression PAREN_CLOSE block_statement
             | IF PAREN_OPEN expression PAREN_CLOSE block_statement ELSE block_statement

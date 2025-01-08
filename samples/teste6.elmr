@@ -2,14 +2,13 @@
 
 {
     print("teste");
-}
+};
 
 for(int i = 0; j < 10; k++){
     print(i);
-}
+};
 
 
-/*
 int b = 10;
 int a;
 a = 20;
@@ -33,33 +32,25 @@ int main(){
 
     if(a =? 10){
         print("aaaa");
-    }
+    };
 
     if(true =? true){
         a++;
-    }
+    };
     
     if(c =? true){
         print("c é true");
-    }
-}
+    };
+};
 
 if(true){
     a++;
-}
+};
 
 if(c){
     a++;
-}
-*/
+};
+
 
 //Não Funcionando
 
-/*
-
-for(int i = 0; i < 10; i++){
-    print(i);
-}
-
-
-*/
