@@ -1,8 +1,13 @@
 //Funcionando
 
-for(int i = 0; i < 10; i++){
+{
+    print("teste");
+}
+
+for(int i = 0; j < 10; k++){
     print(i);
 }
+
 
 /*
 int b = 10;
@@ -46,9 +51,7 @@ if(true){
 if(c){
     a++;
 }
-
 */
-
 
 //Não Funcionando
 
