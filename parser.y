@@ -27,6 +27,11 @@ extern FILE *yyin;
        LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL NOT_EQUAL INCREMENT DECREMENT
        PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT EXPONENT TRUE FALSE
 
+
+%type <sValue> term
+%type <sValue> unary_expression
+
+
 %start program
 
 %left OR AND PLUS MINUS MULTIPLY DIVIDE MODULO
@@ -40,11 +45,11 @@ statement_list: statement
               | statement_list SEMICOLON statement
               ;
 
-type: TYPE_INT
-    | TYPE_FLOAT
-    | TYPE_CHAR
-    | TYPE_BOOL
-    | TYPE_STRING
+type: TYPE_INT {printf("INT\n");}
+    | TYPE_FLOAT {printf("FLOAT\n");}
+    | TYPE_CHAR {printf("CHAR\n");}
+    | TYPE_BOOL {printf("BOOL\n");}
+    | TYPE_STRING {printf("STRING\n");}
     ;
 
 boolean_operator: OR
@@ -81,12 +86,12 @@ statement: declaration
          ;
 
 term: STRING_LITERAL
-    | INT
-    | DECIMAL
-    | TRUE
-    | FALSE
-    | CHAR_LITERAL
-    | ID    {printf("ID\n");}
+    | INT {printf("INT\n");}
+    | DECIMAL  {printf("DECIMAL\n");}
+    | TRUE {printf("True\n");}
+    | FALSE {printf("False\n");}
+    | CHAR_LITERAL {printf("CHAR_LITERAL\n");}
+    | ID  { printf("ID encontrado: %s\n", $1); $$ = $1;}
     ;                
 
 declaration: type ID                             {printf("VAR Declaration\n");}
@@ -99,7 +104,10 @@ assignment: ID ASSIGN expression                  {printf("VAR Assignment\n");}
             ;  
 
 unary_expression: term                                      {printf("term\n");}
-                | term INCREMENT 
+                | term INCREMENT {
+                    printf("term increment: %s\n", $1);
+                    $$ = cat($1, "++", "", "", "");
+                }
                 | term DECREMENT 
                 | INCREMENT unary_expression
                 | DECREMENT unary_expression
@@ -230,3 +238,19 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+char * cat(char * s1, char * s2, char * s3, char * s4, char * s5){
+  int tam;
+  char * output;
+
+  tam = strlen(s1) + strlen(s2) + strlen(s3) + strlen(s4) + strlen(s5)+ 1;
+  output = (char *) malloc(sizeof(char) * tam);
+  
+  if (!output){
+    printf("Allocation problem. Closing application...\n");
+    exit(0);
+  }
+  
+  sprintf(output, "%s%s%s%s%s", s1, s2, s3, s4, s5);
+  
+  return output;
+}
