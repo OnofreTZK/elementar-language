@@ -7,6 +7,9 @@ int yyerror(char *s);
 extern int yylineno;
 extern char *yytext;
 extern FILE *yyin;
+
+char * concat(char *, char *, char *, char *, char *);
+
 %}
 
 %union {
@@ -15,6 +18,7 @@ extern FILE *yyin;
     char cValue;
     char *sValue;
 };
+
 
 %token <sValue> ID STRING_LITERAL
 %token <iValue> INT
@@ -86,11 +90,11 @@ statement: declaration
          ;
 
 term: STRING_LITERAL
-    | INT {printf("INT\n");}
+    | INT {printf("INT\n"); $$ = $1;}
     | DECIMAL  {printf("DECIMAL\n");}
-    | TRUE {printf("True\n");}
-    | FALSE {printf("False\n");}
-    | CHAR_LITERAL {printf("CHAR_LITERAL\n");}
+    | TRUE {printf("True\n"); $$ = "true";}
+    | FALSE {printf("False\n"); $$ = "false";}
+    | CHAR_LITERAL {printf("CHAR\n"); $$ = "char";}
     | ID  { printf("ID encontrado: %s\n", $1); $$ = $1;}
     ;                
 
@@ -106,11 +110,20 @@ assignment: ID ASSIGN expression                  {printf("VAR Assignment\n");}
 unary_expression: term                                      {printf("term\n");}
                 | term INCREMENT {
                     printf("term increment: %s\n", $1);
-                    $$ = cat($1, "++", "", "", "");
+                    printf("codigo: %s\n", concat($1, "++", "", "", ""));
+                    $$ = concat($1, "++", "", "", "");
                 }
-                | term DECREMENT 
-                | INCREMENT unary_expression
-                | DECREMENT unary_expression
+                | term DECREMENT {
+                    printf("term decrement: %s\n", $1);
+                    printf("codigo: %s\n", concat($1, "++", "", "", ""));
+                    $$ = concat($1, "--", "", "", "");
+                }
+                | INCREMENT unary_expression {
+                    
+                }
+                | DECREMENT unary_expression {
+
+                }
                 ;
 
 arithmetic_expression: unary_expression                      {printf("unary_expression\n");}
@@ -238,7 +251,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-char * cat(char * s1, char * s2, char * s3, char * s4, char * s5){
+char * concat(char * s1, char * s2, char * s3, char * s4, char * s5){
   int tam;
   char * output;
 
