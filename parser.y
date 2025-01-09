@@ -2,13 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "./include/util.h"
+
 int yylex(void);
 int yyerror(char *s);
 extern int yylineno;
 extern char *yytext;
 extern FILE *yyin;
-
-char * concat(char *, char *, char *, char *, char *);
 
 %}
 
@@ -90,7 +90,7 @@ statement: declaration
          ;
 
 term: STRING_LITERAL
-    | INT {printf("INT\n"); $$ = $1;}
+    | INT {printf("INT\n"); $$ = "int";}
     | DECIMAL  {printf("DECIMAL\n");}
     | TRUE {printf("True\n"); $$ = "true";}
     | FALSE {printf("False\n"); $$ = "false";}
@@ -249,21 +249,4 @@ int main(int argc, char *argv[]) {
 
     fclose(yyin);
     return 0;
-}
-
-char * concat(char * s1, char * s2, char * s3, char * s4, char * s5){
-  int tam;
-  char * output;
-
-  tam = strlen(s1) + strlen(s2) + strlen(s3) + strlen(s4) + strlen(s5)+ 1;
-  output = (char *) malloc(sizeof(char) * tam);
-  
-  if (!output){
-    printf("Allocation problem. Closing application...\n");
-    exit(0);
-  }
-  
-  sprintf(output, "%s%s%s%s%s", s1, s2, s3, s4, s5);
-  
-  return output;
 }
