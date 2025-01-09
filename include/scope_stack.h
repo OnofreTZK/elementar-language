@@ -3,10 +3,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "types.h"
 
-typedef struct {
-	char * current;
-  Scope * next;
-} Scope;
+void push(char* value , Scope * stack);
 
 #endif
