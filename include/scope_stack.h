@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "types.h"
 
-Scope* create_scope_stack();
+Scope* createScopeStack();
 
 void push(char*, Scope**);
 

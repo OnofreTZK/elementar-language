@@ -3,38 +3,39 @@
 #include <types.h>
 #include <scope_stack.h>
 
-Scope* create_scope_stack() {
-  Scope* scope = malloc(sizeof(Scope)); 
+Scope* createNode(char* value){
+	Scope * scope = malloc(sizeof(Scope));
 
-  scope->next = NULL;
+	scope->current = value;
+	scope->next = NULL;
 
-  return scope;
+	return scope;
+}
+
+Scope* createScopeStack() {
+	Scope* scope = NULL;
+
+	return scope;
 }
 
 void push(char* scope, Scope** stack) {	
-	Scope* node = malloc(sizeof(Scope));
-	node->current = malloc(sizeof(strlen(scope)));
-
-	strcpy(node->current, scope);
+	Scope* node = createNode(scope);
 	
-	node->next = *stack;		
-	
-	*stack = node;
+	node->next = *stack;
+	*stack = node;	
 }
 
 char * pop(Scope** stack) {
-	char* value;
-
-	if (!(*stack)->next) {
-		return NULL;
+	if (*stack == NULL) {
+		return "Out of scopes";
 	} else {
 		Scope* temp = *stack;
 
 		char* value = temp->current;
 
+		*stack = temp->next;
+		
 		free(temp);
-
-		*stack = (*stack)->next;
 
 		return value;
 	}

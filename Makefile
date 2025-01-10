@@ -22,4 +22,4 @@ clean_tests:
 
 run_tests: build_tests
 	@./runner
-	clean_tests
+	@make clean_tests
