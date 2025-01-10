@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include "types.h"
 
-void push(char* value , Scope * stack);
+Scope* create_scope_stack();
+
+void push(char*, Scope**);
+
+char* pop(Scope**);
 
 #endif
