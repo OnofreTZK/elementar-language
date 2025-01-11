@@ -8,10 +8,13 @@ int main() {
     push("2", &scope);
     push("3", &scope);
 
-    while(scope != NULL) {
-        char* current_scope = pop(&scope);
+    char* peekedValue = peek(scope);
+    printf("Peek value: %s\n", peekedValue);
 
-        printf(">>> %s\n", current_scope);
+    while(scope != NULL) {
+        char* currentScope = pop(&scope);
+
+        printf(">>> %s\n", currentScope);
     }
     
     return 0;

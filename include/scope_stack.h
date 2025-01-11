@@ -11,4 +11,6 @@ void push(char*, Scope**);
 
 char* pop(Scope**);
 
+char* peek(Scope*);
+
 #endif

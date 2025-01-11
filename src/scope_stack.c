@@ -40,3 +40,7 @@ char * pop(Scope** stack) {
 		return value;
 	}
 } 
+
+char* peek(Scope* stack){
+	return stack->current;
+}
