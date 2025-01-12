@@ -28,8 +28,13 @@ extern FILE *yyin;
        LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL NOT_EQUAL INCREMENT DECREMENT
        PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT EXPONENT TRUE FALSE
 
-%type <rec> term
-%type <rec> unary_expression
+%type <rec> term unary_expression arithmetic_expression relational_expression 
+%type <rec> boolean_expression expression arithmetic_operator relational_operator boolean_operator
+%type <rec> statement_list statement type declaration initialization assignment
+%type <rec> main for_statement for_initializer for_increment parameter_list
+%type <rec> parameter_list_nonempty function_declaration argument_list argument_list_nonempty
+%type <rec> function_call block_statement if_statement while_statement return_statement
+
 
 %start program
 
@@ -44,31 +49,70 @@ statement_list: statement
               | statement_list SEMICOLON statement
               ;
 
-type: TYPE_INT {printf("INT\n");}
-    | TYPE_FLOAT {printf("FLOAT\n");}
-    | TYPE_CHAR {printf("CHAR\n");}
-    | TYPE_BOOL {printf("BOOL\n");}
-    | TYPE_STRING {printf("STRING\n");}
+type: TYPE_INT {$$ = createRecord("int","type");}
+    | TYPE_FLOAT {$$ = createRecord("float","type");}
+    | TYPE_CHAR {$$ = createRecord("char","type");}
+    | TYPE_BOOL {$$ = createRecord("bool","type");}
+    | TYPE_STRING {$$ = createRecord("string","type");}
     ;
 
-boolean_operator: OR
-                | AND
+boolean_operator: OR {
+                    printf("OR\n");
+                    $$ = createRecord("||","operator");
+                }
+                | AND {
+                    printf("AND\n");
+                    $$ = createRecord("&&","operator");
+                }
                 ;
 
-relational_operator: EQUALS 
-                   | NOT_EQUAL
-                   | LESS_THAN
-                   | LESS_EQUAL
-                   | GREATER_THAN
-                   | GREATER_EQUAL
+relational_operator: EQUALS {
+                        printf("EQUALS\n");
+                        $$ = createRecord("=?","operator");
+                    }
+                    | NOT_EQUAL {
+                        printf("NOT_EQUAL\n");
+                        $$ = createRecord("!=","operator");
+                   }
+                    | LESS_THAN {
+                        printf("LESS_THAN\n");
+                        $$ = createRecord("<","operator");
+                   }
+                    | LESS_EQUAL {
+                        printf("LESS_EQUAL\n");
+                        $$ = createRecord("<=","operator");
+                   }
+                    | GREATER_THAN {
+                        printf("GREATER_THAN\n");
+                        $$ = createRecord(">","operator");
+                   }
+                    | GREATER_EQUAL {
+                        printf("GREATER_EQUAL\n");
+                        $$ = createRecord(">=","operator");
+                   }
                    ;
 
-arithmetic_operator: PLUS 
-                   | MINUS 
-                   | MULTIPLY 
-                   | DIVIDE 
-                   | MODULO
-                   ;
+arithmetic_operator: PLUS {
+                    printf("PLUS\n");
+                    $$ = createRecord("+","operator");
+                }
+                | MINUS{
+                    printf("MINUS\n");
+                    $$ = createRecord("-","operator");
+                }
+                | MULTIPLY {
+                    printf("MULTIPLY\n");
+                    $$ = createRecord("*","operator");
+                }
+                | DIVIDE {
+                    printf("DIVIDE\n");
+                    $$ = createRecord("/","operator");
+                }
+                | MODULO {
+                    printf("MODULO\n");
+                    $$ = createRecord("%","operator");
+                }
+                ;
 
 statement: declaration
          | initialization
@@ -81,7 +125,10 @@ statement: declaration
          | block_statement
          | function_declaration
          | expression
-         | SEMICOLON
+         | SEMICOLON {
+            printf("SEMICOLON\n");
+            $$ = createRecord("","semicolon");
+         }
          ;
 
 term: STRING_LITERAL {
@@ -114,63 +161,137 @@ term: STRING_LITERAL {
     }
     ;                
 
-declaration: type ID                             {printf("VAR Declaration\n");}
+declaration: type ID {
+                printf("VAR Declaration\n");
+                char * code = concat($1->code, $2, "", "", "");
+                $$ = createRecord(code,"");
+                freeRecord($1);
+                free(code);
+            }
             ;  
 
-initialization: type ID ASSIGN expression         {printf("VAR Initialization\n");}
+initialization: type ID ASSIGN expression {
+                printf("VAR Initialization\n");
+                char * code = concat($1->code, $2, "=", $4->code, "");
+                $$ = createRecord($2,"");
+                freeRecord($1);
+                freeRecord($4);
+                free(code);
+            }
             ;  
 
-assignment: ID ASSIGN expression                  {printf("VAR Assignment\n");}
+assignment: ID ASSIGN expression {
+                //printf("Assignment\n");
+                //char * code = concat($1, "=", $3->code, "", "");
+                //$$ = createRecord(code,"");
+                //freeRecord($1);
+                //freeRecord($3);
+                //free(code);
+            }
             ;  
 
-unary_expression: term                                      {printf("term\n");}
+
+/* 
+- Checar tipos para não permitir coisas como ++<string>
+*/
+unary_expression: term {
+                    printf("codigo: %s\n", $1->code);
+                    $$ = createRecord($1->code,"");
+                    freeRecord($1);
+                }                                    
                 | term INCREMENT {
                     printf("term increment: %s\n", $1->code);
-
-                    freeRecord($1);
-
+                  
                     char * code = concat($1->code, "++", "", "", "");
                     printf("codigo: %s\n", code);
 
+                    freeRecord($1);
                     $$ = createRecord(code,"");
                     free(code);
                 }
                 | term DECREMENT {
                     printf("term decrement: %s\n", $1->code);
-                  
-                    freeRecord($1);
 
                     char * code = concat($1->code, "--", "", "", "");
                     printf("codigo: %s\n", code);
 
+                    freeRecord($1);
                     $$ = createRecord(code,"");
                     free(code);
                 }
-                | INCREMENT unary_expression {
-                    
-                }
-                | DECREMENT unary_expression {
-
-                }
                 ;
 
-arithmetic_expression: unary_expression                      {printf("unary_expression\n");}
-                     | arithmetic_expression arithmetic_operator unary_expression
-                     ;
+arithmetic_expression: unary_expression {
+                        printf("unary_expression\n");
+                        $$ = createRecord($1->code,"");
+                        freeRecord($1);
+                    }
+                    | arithmetic_expression arithmetic_operator unary_expression {
+                        char * code = concat($1->code, $2->code, $3->code, "", "");
+                        printf("arithmetic_expression: %s\n", code);
+                        $$ = createRecord(code,"");
+                        freeRecord($1);
+                        freeRecord($2);
+                        freeRecord($3);
+                        free(code);
+                    }
+                    ;
 
-relational_expression: arithmetic_expression                  {printf("arithmetic_expression\n");}
-                     | relational_expression relational_operator arithmetic_expression
-                     ;
+relational_expression: arithmetic_expression {
+                        printf("arithmetic_expression\n");
+                        $$ = createRecord($1->code,"");
+                        freeRecord($1);
+                    }
+                    | relational_expression relational_operator arithmetic_expression {
+                        char * code = concat($1->code, $2->code, $3->code, "", "");
+                        printf("relational_expression: %s\n", code);
+                        $$ = createRecord(code,"");
+                        freeRecord($1);
+                        freeRecord($2);
+                        freeRecord($3);
+                        free(code);
+                    }
+                    ;
 
-boolean_expression: relational_expression                       {printf("relational_expression\n");}
-                  | boolean_expression boolean_operator relational_expression {printf("boolean_expression boolean_operator relational_expression\n");}
-                  | NOT boolean_expression                       {printf("NOTA boolean_expression\n");}
-                  ;
+boolean_expression: relational_expression {
+                        //printf("relational_expression\n");
+                        //$$ = createRecord($1->code,"");
+                        //freeRecord($1);
+                    }
+                    | boolean_expression boolean_operator relational_expression {
+                        //char * code = concat($1->code, $2->code, $3->code, "", "");
+                        //printf("boolean_expression: %s\n", code);
+                        //$$ = createRecord(code,"");
+                        //freeRecord($1);
+                        //freeRecord($2);
+                        //freeRecord($3);
+                        //free(code);
+                    }
+                    | NOT boolean_expression {
+                        //char * code = concat("!", $1->code, "", "", "");
+                        //printf("boolean_expression: %s\n", code);
+                        //$$ = createRecord(code,"");
+                        //freeRecord($1);
+                        //free(code);
+                    }
+                    ;
 
-expression: PAREN_OPEN expression PAREN_CLOSE   {printf("(expression)\n");}
-          | boolean_expression                  {printf("boolean expression\n");}
-          | function_call                       {printf("function_call\n");}
-          ;
+expression: PAREN_OPEN expression PAREN_CLOSE {
+            //printf("expression\n");
+            //$$ = createRecord($2->code,"");
+            //freeRecord($2);
+        }
+        | boolean_expression {
+            //printf("boolean_expression\n");
+            //$$ = createRecord($1->code,"");
+            //freeRecord($1);
+        }
+        | function_call {
+            //printf("function_call\n");
+            //$$ = createRecord($1->code,"");
+            //freeRecord($1);
+        }
+        ;
 
 main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement   {printf("Main function\n");}
         ;
@@ -179,15 +300,28 @@ main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement   {printf("Main function\
 for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for_increment PAREN_CLOSE block_statement {printf("for_statement\n");}
         ;
 
-for_initializer: /* epsilon */      
-               | initialization      {printf("initialization\n");}
-               | assignment          {printf("assignment\n");}
-               ;    
+for_initializer: /* epsilon */  {
+                    printf("for_initializer\n");
+                   
+                }    
+                | initialization      {printf("initialization\n");}
+                | assignment          {printf("assignment\n");}
+                ;    
 
-for_increment: ID INCREMENT         {printf("for_increment\n");}
-             | ID DECREMENT
-             | assignment
-             ;
+for_increment: ID INCREMENT {
+                printf("for_increment\n");
+                char * code = concat($1, "++", "", "", "");
+                $$ = createRecord(code,"");
+                free(code);
+            }
+            | ID DECREMENT {
+                printf("for_decrement\n");
+                char * code = concat($1, "--", "", "", "");
+                $$ = createRecord(code,"");
+                free(code);
+            }
+            | assignment
+            ;
 
 parameter_list: /* epsilon */
               | parameter_list_nonempty
