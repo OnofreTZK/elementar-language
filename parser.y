@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "./include/util.h"
+#include "./src/util.h"
+#include "./src/record.h"
 
 int yylex(void);
 int yyerror(char *s);
@@ -13,17 +14,13 @@ extern FILE *yyin;
 %}
 
 %union {
-    int iValue;
-    float fValue;
-    char cValue;
-    char *sValue;
-};
+	char * sValue; 
+	struct record * rec;
+ };
 
 
-%token <sValue> ID STRING_LITERAL
-%token <iValue> INT
-%token <fValue> DECIMAL
-%token <cValue> CHAR_LITERAL
+%token <sValue> ID STRING_LITERAL INT DECIMAL CHAR_LITERAL
+
 %token TYPE_INT TYPE_VOID CONST TYPE_CHAR TYPE_STRUCT TYPE_STRING TYPE_SHORT 
        TYPE_UNSIGNED_INT TYPE_FLOAT TYPE_DOUBLE TYPE_LONG IF ELSE WHILE RETURN MAIN TYPE_BOOL
        SWITCH FOR CASE BREAK CONTINUE BLOCK_BEGIN BLOCK_END PAREN_OPEN
@@ -31,10 +28,8 @@ extern FILE *yyin;
        LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL NOT_EQUAL INCREMENT DECREMENT
        PLUS MINUS MULTIPLY DIVIDE MODULO AND OR NOT EXPONENT TRUE FALSE
 
-
-%type <sValue> term
-%type <sValue> unary_expression
-
+%type <rec> term
+%type <rec> unary_expression
 
 %start program
 
@@ -89,13 +84,34 @@ statement: declaration
          | SEMICOLON
          ;
 
-term: STRING_LITERAL
-    | INT {printf("INT\n"); $$ = "int";}
-    | DECIMAL  {printf("DECIMAL\n");}
-    | TRUE {printf("True\n"); $$ = "true";}
-    | FALSE {printf("False\n"); $$ = "false";}
-    | CHAR_LITERAL {printf("CHAR\n"); $$ = "char";}
-    | ID  { printf("ID encontrado: %s\n", $1); $$ = $1;}
+term: STRING_LITERAL {
+        printf("STRING\n");
+        $$ = createRecord($1,"string");
+    }
+    | INT {
+        printf("INT\n");
+        $$ = createRecord($1,"int");
+    }
+    | DECIMAL  {
+        printf("DECIMAL\n");
+        $$ = createRecord($1,"decimal");
+    }
+    | TRUE {
+        printf("True\n"); 
+        $$ = createRecord("true","bool");
+    }
+    | FALSE {
+        printf("False\n"); 
+        $$ = createRecord("false","bool");
+    }
+    | CHAR_LITERAL {
+        printf("CHAR\n"); 
+        $$ = createRecord($1,"char");
+    }
+    | ID  { 
+        printf("ID encontrado: %s\n", $1); 
+        $$ = createRecord($1,"id");
+    }
     ;                
 
 declaration: type ID                             {printf("VAR Declaration\n");}
@@ -109,14 +125,26 @@ assignment: ID ASSIGN expression                  {printf("VAR Assignment\n");}
 
 unary_expression: term                                      {printf("term\n");}
                 | term INCREMENT {
-                    printf("term increment: %s\n", $1);
-                    printf("codigo: %s\n", concat($1, "++", "", "", ""));
-                    $$ = concat($1, "++", "", "", "");
+                    printf("term increment: %s\n", $1->code);
+
+                    freeRecord($1);
+
+                    char * code = concat($1->code, "++", "", "", "");
+                    printf("codigo: %s\n", code);
+
+                    $$ = createRecord(code,"");
+                    free(code);
                 }
                 | term DECREMENT {
-                    printf("term decrement: %s\n", $1);
-                    printf("codigo: %s\n", concat($1, "++", "", "", ""));
-                    $$ = concat($1, "--", "", "", "");
+                    printf("term decrement: %s\n", $1->code);
+                  
+                    freeRecord($1);
+
+                    char * code = concat($1->code, "--", "", "", "");
+                    printf("codigo: %s\n", code);
+
+                    $$ = createRecord(code,"");
+                    free(code);
                 }
                 | INCREMENT unary_expression {
                     
