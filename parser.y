@@ -334,14 +334,39 @@ parameter_list_nonempty: type ID
 function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement
 
 
-argument_list: /* epsilon */                                {printf("argument_list\n");}
-            | argument_list_nonempty;
+argument_list: /* epsilon */  {
+                printf("argument_list\n");
+                $$ = createRecord("","argument_list");
+            }
+            | argument_list_nonempty {
+                printf("argument_list\n");
+                $$ = createRecord($1->code,"");
+                freeRecord($1);
+            }
+            ;
 
-argument_list_nonempty: term                                {printf("argument_list_nonempty\n");}
-                      |term COMMA argument_list_nonempty 
+argument_list_nonempty: term  {
+                        printf("argument_list_nonempty\n");
+                        $$ = createRecord($1->code,"");
+                        freeRecord($1);
+                    }
+                    |term COMMA argument_list_nonempty {
+                        char * code = concat($1->code, ",", $3->code, "", "");
+                        printf("argument_list_nonempty: %s\n", code);
+                        $$ = createRecord(code,"");
+                        freeRecord($1);
+                        freeRecord($3);
+                        free(code);
+                    }
 
 
-function_call: ID PAREN_OPEN argument_list PAREN_CLOSE      {printf("function_call\n");}
+function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
+                printf("function_call\n");
+                char * code = concat($1, "(", $3->code, ")", "");
+                $$ = createRecord(code,"");
+                freeRecord($3);
+                free(code);
+            }
 
 
 block_statement: BLOCK_BEGIN statement_list SEMICOLON BLOCK_END;
