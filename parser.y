@@ -59,13 +59,13 @@ program: statement_list SEMICOLON {
         ;
 
 statement_list: statement {
-                printf("statement_list\n");
                 $$ = createRecord($1->code,"");
+                printf("statement_list: %s\n", $1->code);
                 freeRecord($1);
             }
             | statement_list SEMICOLON statement {
                 char * code = concat($1->code, ";\n", $3->code, "", "");
-                printf("statement_list: %s\n", code);
+                printf("statement_list 2: %s\n", code);
                 $$ = createRecord(code,"");
                 freeRecord($1);
                 freeRecord($3);
@@ -139,22 +139,23 @@ arithmetic_operator: PLUS {
                 ;
 
 statement: declaration {
-                printf("declaration\n");
-                $$ = createRecord("","declaration");
+                $$ = createRecord($1->code,"declaration");
+                printf("declaration: %s\n", $1->code);
+                freeRecord($1);
             }
             | initialization {
-                printf("initialization\n");
                 $$ = createRecord($1->code,"");
+                printf("initialization: %s\n", $1->code);
                 freeRecord($1);
             }
             | assignment {
-                printf("assignment\n");
                 $$ = createRecord($1->code,"");
+                printf("assignment: %s\n", $1->code);
                 freeRecord($1);
             }
             | main {
-                printf("main\n");
                 $$ = createRecord($1->code,"main");
+                printf("main: %s\n", $1->code);
                 freeRecord($1);
             }
             | if_statement {
@@ -170,23 +171,23 @@ statement: declaration {
                 $$ = createRecord("TODO","for_statement");
             }
             | return_statement {
-                printf("return_statement\n");
                 $$ = createRecord($1->code,"");
+                printf("return_statement: %s\n", $1->code);
                 freeRecord($1);
             }
             | block_statement {
-                printf("block_statement\n");
                 $$ = createRecord($1->code,"");
+                printf("block_statement 0: %s\n", $1->code);
                 freeRecord($1);
             }
             | function_declaration {
-                printf("function_declaration\n");
                 $$ = createRecord($1->code,"function_declaration");
+                printf("function_declaration 0: %s\n", $1->code);
                 freeRecord($1);
             }
             | expression {
-                printf("expression\n");
                 $$ = createRecord($1->code,"");
+                printf("expression: %s\n", $1->code);
                 freeRecord($1);
             }
             | SEMICOLON {
@@ -236,8 +237,8 @@ declaration: type ID {
 
 initialization: type ID ASSIGN expression {
                 printf("VAR Initialization\n");
-                char * code = concat($1->code, $2, "=", $4->code, "");
-                $$ = createRecord($2,"");
+                char * code = concat($1->code," ",$2, " = ", $4->code);
+                $$ = createRecord(code,"");
                 freeRecord($1);
                 freeRecord($4);
                 free(code);
@@ -301,8 +302,9 @@ arithmetic_expression: unary_expression {
                     ;
 
 relational_expression: arithmetic_expression {
-                        printf("arithmetic_expression\n");
+                      
                         $$ = createRecord($1->code,"");
+                        printf("arithmetic_expression: %s\n", $1->code);
                         freeRecord($1);
                     }
                     | relational_expression relational_operator arithmetic_expression {
@@ -317,13 +319,13 @@ relational_expression: arithmetic_expression {
                     ;
 
 boolean_expression: relational_expression {
-                        printf("relational_expression\n");
                         $$ = createRecord($1->code,"");
+                        printf("relational_expression: %s\n", $1->code);
                         freeRecord($1);
                     }
                     | boolean_expression boolean_operator relational_expression {
                         char * code = concat($1->code, $2->code, $3->code, "", "");
-                        printf("boolean_expression: %s\n", code);
+                        printf("boolean_expression 1: %s\n", code);
                         $$ = createRecord(code,"");
                         freeRecord($1);
                         freeRecord($2);
@@ -332,7 +334,7 @@ boolean_expression: relational_expression {
                     }
                     | NOT boolean_expression {
                         char * code = concat("!", $2->code, "", "", "");
-                        printf("boolean_expression: %s\n", code);
+                        printf("boolean_expression 2: %s\n", code);
                         $$ = createRecord(code,"");
                         freeRecord($2);
                         free(code);
@@ -340,13 +342,13 @@ boolean_expression: relational_expression {
                     ;
 
 expression: PAREN_OPEN expression PAREN_CLOSE {
-            printf("expression\n");
             $$ = createRecord($2->code,"");
+            printf("expression 1: %s\n", $2->code);
             freeRecord($2);
         }
         | boolean_expression {
-            printf("boolean_expression\n");
             $$ = createRecord($1->code,"");
+            printf("boolean_expression 3: %s\n", $1->code);
             freeRecord($1);
         }
         | function_call {
@@ -358,7 +360,7 @@ expression: PAREN_OPEN expression PAREN_CLOSE {
 
 main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement {
             printf("main\n");
-            char * code = concat($1->code, " main", "(int argc, char *argv[])", $5->code, "");
+            char * code = concat($1->code, " main", "(int argc, char *argv[])\n", $5->code, "");
             $$ = createRecord(code,"");
             freeRecord($1);
             freeRecord($5);
@@ -489,7 +491,6 @@ argument_list_nonempty: term  {
             free(code);
         }
 
-
 function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
         printf("function_call\n");
         char * code = concat($1, "(", $3->code, ")", "");
@@ -498,16 +499,14 @@ function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
         free(code);
     }
 
-
 block_statement: BLOCK_BEGIN statement_list SEMICOLON BLOCK_END {
-        printf("block_statement\n");
-        char * code = concat("{", $2->code, ";", "}", "");
+       
+        char * code = concat("{\n", $2->code, ";", "\n}", "");
+        printf("block_statement: %s\n", code);
         $$ = createRecord(code,"");
         freeRecord($2);
     }
     ;
-                
-
 
 return_statement: RETURN expression {
         printf("return_statement\n");
