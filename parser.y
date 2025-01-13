@@ -181,12 +181,11 @@ initialization: type ID ASSIGN expression {
             ;  
 
 assignment: ID ASSIGN expression {
-                //printf("Assignment\n");
-                //char * code = concat($1, "=", $3->code, "", "");
-                //$$ = createRecord(code,"");
-                //freeRecord($1);
-                //freeRecord($3);
-                //free(code);
+                printf("Assignment\n");
+                char * code = concat($1, "=", $3->code, "", "");
+                $$ = createRecord(code,"");
+                freeRecord($3);
+                free(code);
             }
             ;  
 
@@ -287,9 +286,9 @@ expression: PAREN_OPEN expression PAREN_CLOSE {
             freeRecord($1);
         }
         | function_call {
-            //printf("function_call\n");
-            //$$ = createRecord($1->code,"");
-            //freeRecord($1);
+            printf("function_call\n");
+            $$ = createRecord($1->code,"");
+            freeRecord($1);
         }
         ;
 
@@ -302,10 +301,18 @@ for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for
 
 for_initializer: /* epsilon */  {
                     printf("for_initializer\n");
-                   
+                    $$ = createRecord("","for_initializer");
                 }    
-                | initialization      {printf("initialization\n");}
-                | assignment          {printf("assignment\n");}
+                | initialization {
+                    printf("for_initializer\n");
+                    $$ = createRecord($1->code,"");
+                    freeRecord($1);
+                }
+                | assignment {
+                    printf("for_initializer\n");
+                    $$ = createRecord($1->code,"");
+                    freeRecord($1);
+                }
                 ;    
 
 for_increment: ID INCREMENT {
