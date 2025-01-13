@@ -31,10 +31,13 @@ extern FILE *yyin;
 %type <rec> term unary_expression arithmetic_expression relational_expression 
 %type <rec> boolean_expression expression arithmetic_operator relational_operator boolean_operator
 %type <rec> statement_list statement type declaration initialization assignment
-%type <rec> main for_statement for_initializer for_increment parameter_list
-%type <rec> parameter_list_nonempty function_declaration argument_list argument_list_nonempty
-%type <rec> function_call block_statement if_statement while_statement return_statement
-
+%type <rec> main for_statement for_initializer for_increment 
+%type <rec> function_declaration argument_list argument_list_nonempty
+%type <rec> function_call if_statement while_statement return_statement
+%type <rec> program
+%type <rec> parameter_list_nonempty
+%type <rec> block_statement
+%type <rec> parameter_list
 
 %start program
 
@@ -43,11 +46,31 @@ extern FILE *yyin;
 %nonassoc EQUALS NOT_EQUAL LESS_THAN LESS_EQUAL GREATER_THAN GREATER_EQUAL
 
 %%
-program: statement_list SEMICOLON;
 
-statement_list: statement
-              | statement_list SEMICOLON statement
-              ;
+//Salvar programa em arquivo aqui
+program: statement_list SEMICOLON {
+            printf("program\n");
+            char * final = concat("#include <stdio.h>\n", $1->code, "", "", "");
+            printf("código final: %s\n", final);
+            freeRecord($1);
+            //salvar código em arquivo
+        }
+        ;
+
+statement_list: statement {
+                printf("statement_list\n");
+                $$ = createRecord($1->code,"");
+                freeRecord($1);
+            }
+            | statement_list SEMICOLON statement {
+                char * code = concat($1->code, ";\n", $3->code, "", "");
+                printf("statement_list: %s\n", code);
+                $$ = createRecord(code,"");
+                freeRecord($1);
+                freeRecord($3);
+                free(code);
+            }
+            ;
 
 type: TYPE_INT {$$ = createRecord("int","type");}
     | TYPE_FLOAT {$$ = createRecord("float","type");}
@@ -114,21 +137,61 @@ arithmetic_operator: PLUS {
                 }
                 ;
 
-statement: declaration
-         | initialization
-         | assignment
-         | main
-         | if_statement
-         | while_statement
-         | for_statement
-         | return_statement
-         | block_statement
-         | function_declaration
-         | expression
-         | SEMICOLON {
-            printf("SEMICOLON\n");
-            $$ = createRecord("","semicolon");
-         }
+statement: declaration {
+                printf("declaration\n");
+                $$ = createRecord("","declaration");
+            }
+            | initialization {
+                printf("initialization\n");
+                $$ = createRecord($1->code,"");
+                freeRecord($1);
+            }
+            | assignment {
+                printf("assignment\n");
+                $$ = createRecord($1->code,"");
+                freeRecord($1);
+            }
+            | main {
+                printf("main\n");
+                $$ = createRecord($1->code,"main");
+                freeRecord($1);
+            }
+            | if_statement {
+                printf("if_statement\n");
+                $$ = createRecord("TODO","if_statement");
+            }
+            | while_statement {
+                printf("while_statement\n");
+                $$ = createRecord("TODO","while_statement");
+            }
+            | for_statement {
+                printf("for_statement\n");
+                $$ = createRecord("TODO","for_statement");
+            }
+            | return_statement {
+                printf("return_statement\n");
+                $$ = createRecord($1->code,"");
+                freeRecord($1);
+            }
+            | block_statement {
+                printf("block_statement\n");
+                $$ = createRecord($1->code,"");
+                freeRecord($1);
+            }
+            | function_declaration {
+                printf("function_declaration\n");
+                $$ = createRecord($1->code,"function_declaration");
+                freeRecord($1);
+            }
+            | expression {
+                printf("expression\n");
+                $$ = createRecord($1->code,"");
+                freeRecord($1);
+            }
+            | SEMICOLON {
+                printf("SEMICOLON\n");
+                $$ = createRecord("","semicolon");
+            }
          ;
 
 term: STRING_LITERAL {
@@ -292,8 +355,33 @@ expression: PAREN_OPEN expression PAREN_CLOSE {
         }
         ;
 
-main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement   {printf("Main function\n");}
+main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement {
+            printf("main\n");
+            char * code = concat($1->code, " main", "(int argc, char *argv[])", $5->code, "");
+            $$ = createRecord(code,"");
+            freeRecord($1);
+            freeRecord($5);
+            free(code);
+        }
         ;
+
+
+// Utilizar goto?
+if_statement: IF PAREN_OPEN expression PAREN_CLOSE block_statement {
+                printf("if_statement\n");
+              
+            }
+            | IF PAREN_OPEN expression PAREN_CLOSE block_statement ELSE block_statement {
+                 printf("if_else_statement\n");
+            }
+            ;
+
+// Utilizar goto para implementar o while
+while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement {
+                    printf("while_statement\n");
+
+                }
+                ;
 
 
 for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for_increment PAREN_CLOSE block_statement {printf("for_statement\n");}
@@ -330,15 +418,49 @@ for_increment: ID INCREMENT {
             | assignment
             ;
 
-parameter_list: /* epsilon */
-              | parameter_list_nonempty
-              ;
+parameter_list: /* epsilon */ {
+                printf("parameter_list\n");
+                $$ = createRecord("","parameter_list");
+            }
+            | parameter_list_nonempty {
+                printf("parameter_list\n");
+                $$ = createRecord($1->code,"");
+                freeRecord($1);
+            }
+            ;
 
-parameter_list_nonempty: type ID
-                       | type ID COMMA parameter_list_nonempty
-                       ;
+parameter_list_nonempty: type ID {
+                char * code = concat($1->code, $2, "", "", "");
+                
+                printf("parameter_list_nonempty: %s\n", code);
+                //Error
+                //$$ = createRecord(code,"");
+                freeRecord($1);
+                free(code);
+            }
+            type ID COMMA parameter_list_nonempty {
+                char * code = concat($1->code, $2, ",", $4->code, "");
+                printf("parameter_list_nonempty: %s\n", code);
+                $$ = createRecord(code,"");
+                freeRecord($1);
+                freeRecord($4);
+                free(code);
+            }
+            ;
              
-function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement
+function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement {
+            printf("function_declaration\n");
+            char * code = concat($1->code, $2, "(", $4->code, ")");
+            char * code2 = concat(code, $6->code, "", "", "");
+            $$ = createRecord(code,"");
+            freeRecord($1);
+            freeRecord($4);
+            freeRecord($6);
+            free(code);
+            free(code2);
+        }
+        ;   
+
 
 
 argument_list: /* epsilon */  {
@@ -353,39 +475,47 @@ argument_list: /* epsilon */  {
             ;
 
 argument_list_nonempty: term  {
-                        printf("argument_list_nonempty\n");
-                        $$ = createRecord($1->code,"");
-                        freeRecord($1);
-                    }
-                    |term COMMA argument_list_nonempty {
-                        char * code = concat($1->code, ",", $3->code, "", "");
-                        printf("argument_list_nonempty: %s\n", code);
-                        $$ = createRecord(code,"");
-                        freeRecord($1);
-                        freeRecord($3);
-                        free(code);
-                    }
+            printf("argument_list_nonempty\n");
+            $$ = createRecord($1->code,"");
+            freeRecord($1);
+        }
+        |term COMMA argument_list_nonempty {
+            char * code = concat($1->code, ",", $3->code, "", "");
+            printf("argument_list_nonempty: %s\n", code);
+            $$ = createRecord(code,"");
+            freeRecord($1);
+            freeRecord($3);
+            free(code);
+        }
 
 
 function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
-                printf("function_call\n");
-                char * code = concat($1, "(", $3->code, ")", "");
-                $$ = createRecord(code,"");
-                freeRecord($3);
-                free(code);
-            }
+        printf("function_call\n");
+        char * code = concat($1, "(", $3->code, ")", "");
+        $$ = createRecord(code,"");
+        freeRecord($3);
+        free(code);
+    }
 
 
-block_statement: BLOCK_BEGIN statement_list SEMICOLON BLOCK_END;
+block_statement: BLOCK_BEGIN statement_list SEMICOLON BLOCK_END {
+        printf("block_statement\n");
+        char * code = concat("{", $2->code, ";", "}", "");
+        $$ = createRecord(code,"");
+        freeRecord($2);
+    }
+    ;
                 
 
-if_statement: IF PAREN_OPEN expression PAREN_CLOSE block_statement
-            | IF PAREN_OPEN expression PAREN_CLOSE block_statement ELSE block_statement
-            ;
 
-while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement;
-
-return_statement: RETURN expression;
+return_statement: RETURN expression {
+        printf("return_statement\n");
+        char * code = concat("return ", $2->code, "", "", ";");
+        $$ = createRecord(code,"");
+        freeRecord($2);
+        free(code);
+    }
+    ;
 
 %%
 
