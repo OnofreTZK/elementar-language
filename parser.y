@@ -12,6 +12,9 @@ extern int yylineno;
 extern char *yytext;
 extern FILE *yyin;
 
+#define FILENAME "./outputs/output.c"
+#define PROGRAM_NAME "./outputs/program"
+
 %}
 
 %union {
@@ -54,7 +57,21 @@ program: statement_list SEMICOLON {
             char * final = concat("#include <stdio.h>\n", $1->code, "", "", "");
             freeRecord($1);
             //salva código em arquivo
-            saveCode(final, "output.c");
+            saveCode(final, FILENAME);
+
+            const char *executable = PROGRAM_NAME;
+            char command[256];
+            snprintf(command, sizeof(command), "gcc -o %s %s", executable, FILENAME);
+            printf("Compilando o código com o comando: %s\n", command);
+
+            int result = system(command);
+            if (result == 0) {
+                printf("Código compilado com sucesso! Executável gerado: %s\n", executable);
+            } else {
+                fprintf(stderr, "Erro ao compilar o código. Verifique o arquivo '%s' para detalhes.\n", FILENAME);
+            }
+
+            free(final);
         }
         ;
 
