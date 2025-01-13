@@ -254,37 +254,37 @@ relational_expression: arithmetic_expression {
                     ;
 
 boolean_expression: relational_expression {
-                        //printf("relational_expression\n");
-                        //$$ = createRecord($1->code,"");
-                        //freeRecord($1);
+                        printf("relational_expression\n");
+                        $$ = createRecord($1->code,"");
+                        freeRecord($1);
                     }
                     | boolean_expression boolean_operator relational_expression {
-                        //char * code = concat($1->code, $2->code, $3->code, "", "");
-                        //printf("boolean_expression: %s\n", code);
-                        //$$ = createRecord(code,"");
-                        //freeRecord($1);
-                        //freeRecord($2);
-                        //freeRecord($3);
-                        //free(code);
+                        char * code = concat($1->code, $2->code, $3->code, "", "");
+                        printf("boolean_expression: %s\n", code);
+                        $$ = createRecord(code,"");
+                        freeRecord($1);
+                        freeRecord($2);
+                        freeRecord($3);
+                        free(code);
                     }
                     | NOT boolean_expression {
-                        //char * code = concat("!", $1->code, "", "", "");
-                        //printf("boolean_expression: %s\n", code);
-                        //$$ = createRecord(code,"");
-                        //freeRecord($1);
-                        //free(code);
+                        char * code = concat("!", $2->code, "", "", "");
+                        printf("boolean_expression: %s\n", code);
+                        $$ = createRecord(code,"");
+                        freeRecord($2);
+                        free(code);
                     }
                     ;
 
 expression: PAREN_OPEN expression PAREN_CLOSE {
-            //printf("expression\n");
-            //$$ = createRecord($2->code,"");
-            //freeRecord($2);
+            printf("expression\n");
+            $$ = createRecord($2->code,"");
+            freeRecord($2);
         }
         | boolean_expression {
-            //printf("boolean_expression\n");
-            //$$ = createRecord($1->code,"");
-            //freeRecord($1);
+            printf("boolean_expression\n");
+            $$ = createRecord($1->code,"");
+            freeRecord($1);
         }
         | function_call {
             //printf("function_call\n");
