@@ -4,6 +4,7 @@
 #include <string.h>
 #include "./src/util.h"
 #include "./src/record.h"
+#include "./src/file_save.h"
 
 int yylex(void);
 int yyerror(char *s);
@@ -51,9 +52,9 @@ extern FILE *yyin;
 program: statement_list SEMICOLON {
             printf("program\n");
             char * final = concat("#include <stdio.h>\n", $1->code, "", "", "");
-            printf("código final: %s\n", final);
             freeRecord($1);
-            //salvar código em arquivo
+            //salva código em arquivo
+            saveCode(final, "output.c");
         }
         ;
 
