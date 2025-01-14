@@ -2,7 +2,8 @@
 #define types_h
 
 typedef struct _Scope {
-	char * current;
+	char * label;
+  unsigned int position;
   struct _Scope * next;
 } Scope ;
 

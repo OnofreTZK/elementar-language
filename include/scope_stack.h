@@ -5,12 +5,14 @@
 #include <stdlib.h>
 #include "types.h"
 
-Scope* createScopeStack();
+Scope* newScopeStack();
 
 void push(char*, Scope**);
 
 char* pop(Scope**);
 
-char* peek(Scope*);
+char* top(Scope*);
+
+char* peek(Scope*, int pos);
 
 #endif
