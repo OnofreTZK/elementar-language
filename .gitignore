@@ -4,6 +4,7 @@ y.tab.c
 y.gv
 y.output
 y.tab.h
+y.dot
 
 # Executable
 compiler
