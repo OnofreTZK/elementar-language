@@ -451,13 +451,12 @@ parameter_list: /* epsilon */ {
 
 parameter_list_nonempty: type ID {
                 char * code = concat($1->code, $2, "", "", "");
-                
                 printf("parameter_list_nonempty: %s\n", code);
-                //Error
-                //$$ = createRecord(code,"");
+                $$ = createRecord(code,"");
                 freeRecord($1);
                 free(code);
             }
+            |
             type ID COMMA parameter_list_nonempty {
                 char * code = concat($1->code, $2, ",", $4->code, "");
                 printf("parameter_list_nonempty: %s\n", code);
