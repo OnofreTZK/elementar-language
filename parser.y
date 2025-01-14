@@ -93,7 +93,7 @@ statement_list: statement {
 type: TYPE_INT {$$ = createRecord("int","type");}
     | TYPE_FLOAT {$$ = createRecord("float","type");}
     | TYPE_CHAR {$$ = createRecord("char","type");}
-    | TYPE_BOOL {$$ = createRecord("bool","type");}
+    | TYPE_BOOL {$$ = createRecord("short int","type");}
     | TYPE_STRING {$$ = createRecord("string","type");}
     ;
 
@@ -227,11 +227,11 @@ term: STRING_LITERAL {
     }
     | TRUE {
         printf("True\n"); 
-        $$ = createRecord("true","bool");
+        $$ = createRecord("1","bool");
     }
     | FALSE {
         printf("False\n"); 
-        $$ = createRecord("false","bool");
+        $$ = createRecord("0","bool");
     }
     | CHAR_LITERAL {
         printf("CHAR\n"); 
@@ -388,13 +388,52 @@ main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement {
 
 // Utilizar goto?
 if_statement: IF PAREN_OPEN expression PAREN_CLOSE block_statement {
-                printf("if_statement\n");
-              
-            }
-            | IF PAREN_OPEN expression PAREN_CLOSE block_statement ELSE block_statement {
-                 printf("if_else_statement\n");
-            }
-            ;
+            printf("if_statement\n");
+
+            // Geração de labels únicos
+            char *label_if = generateLabel("if_block");
+            char *label_end = generateLabel("end_if");
+
+            // Código gerado para o if
+            char *code = concat("if (", $3->code, ") goto ", label_if, ";\n");
+            code = concat(code, "goto ", label_end, ";\n");
+            code = concat(code, label_if, ":\n", $5->code, "\n", label_end, ":");
+
+            $$ = createRecord(code, "if_statement");
+
+            // Liberação de memória
+            free(label_if);
+            free(label_end);
+            freeRecord($3);
+            freeRecord($5);
+            free(code);
+        }
+        | IF PAREN_OPEN expression PAREN_CLOSE block_statement ELSE block_statement {
+            printf("if_else_statement\n");
+
+            // Geração de labels únicos
+            char *label_if = generateLabel("if_block");
+            char *label_else = generateLabel("else_block");
+            char *label_end = generateLabel("end_if_else");
+
+            // Código gerado para o if-else
+            char *code = concat("if (", $3->code, ") goto ", label_if, ";\n");
+            code = concat(code, "goto ", label_else, ";\n");
+            code = concat(code, label_if, ":\n", $5->code, "\ngoto ", label_end, ";\n");
+            code = concat(code, label_else, ":\n", $7->code, "\n", label_end, ":");
+
+            $$ = createRecord(code, "if_else_statement");
+
+            // Liberação de memória
+            free(label_if);
+            free(label_else);
+            free(label_end);
+            freeRecord($3);
+            freeRecord($5);
+            freeRecord($7);
+            free(code);
+        }
+        ;
 
 // Utilizar goto para implementar o while
 while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement {
