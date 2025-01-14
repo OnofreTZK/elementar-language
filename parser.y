@@ -510,11 +510,22 @@ argument_list_nonempty: term  {
 
 function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
         printf("function_call\n");
-        char * code = concat($1, "(", $3->code, ")", "");
-        $$ = createRecord(code,"");
+
+        if(strcmp($1, "print") == 0) { 
+            char * code = concat("printf", "(", $3->code, "", ")");
+            printf("function_call (achei print): %s\n", code);
+            $$ = createRecord(code,"");
+            free(code);
+
+        } else {
+            char * code = concat($1, "(", $3->code, ")", ""); 
+            $$ = createRecord(code,"");
+            free(code);
+        }
+
         freeRecord($3);
-        free(code);
     }
+    ;
 
 block_statement: BLOCK_BEGIN statement_list SEMICOLON BLOCK_END {
        
