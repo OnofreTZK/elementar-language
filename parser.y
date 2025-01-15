@@ -64,13 +64,13 @@ program: statement_list SEMICOLON {
 
             //TODO melhorar isso aqui ao pegar os imports
             snprintf(command, sizeof(command), "gcc %s ./outputs/include/strings.c -o %s", FILENAME, PROGRAM_NAME);
-            printf("Compilando o código com o comando: %s\n", command);
+            printf("Compiling the code with the command: %s\n", command);
 
             int result = system(command);
             if (result == 0) {
-                printf("Código compilado com sucesso! Executável gerado: %s\n", executable);
+                printf("Code compiled succesfully! Executor generated: %s\n", executable);
             } else {
-                fprintf(stderr, "Erro ao compilar o código. Verifique o arquivo '%s' para detalhes.\n", FILENAME);
+                fprintf(stderr, "Error compiling the code. Verify the file '%s' for more details.\n", FILENAME);
             }
 
             free(final);
@@ -190,7 +190,8 @@ statement: declaration {
             }
             | for_statement {
                 printf("for_statement\n");
-                $$ = createRecord("TODO","for_statement");
+                $$ = createRecord($1->code,"for_statement");
+                freeRecord($1);
             }
             | return_statement {
                 $$ = createRecord($1->code,"");
@@ -534,37 +535,18 @@ if_statement: IF PAREN_OPEN expression PAREN_CLOSE block_statement {
 while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement {
     printf("while_statement\n");
 
-    // Gera rótulos únicos para o início e fim do loop
     char *label_start = generateLabel("while_start_");
     char *label_end = generateLabel("while_end_");
 
-    printf("AAAAAAAAAAAAAAAAA");
-
-    // Código gerado para o while
     char *code = concat(label_start, ":\nif (!(", $3->code, ")) goto ", "");
-
-    //printf("%s\n", code);
-    //printf("========================\n");
-
     char *code2 = concat(code, label_end, ";\n", "", "");
-
-    //printf("%s\n", code2);
-    //printf("========================\n");
-
     char *code3 = concat(code2, $5->code, "\ngoto ", label_start, ";\n");
-
-    //printf("%s\n", code3);
-    //printf("========================\n");
-
     char *code4 = concat(code3, label_end, ":\n", "", "");
 
-    printf("%s\n", code4);
-    printf("========================\n");
+    printf("while_statement: %s\n", code4);
 
-    // Cria o registro do código gerado
     $$ = createRecord(code4, "while_statement");
 
-    // Liberação de memória
     free(label_start);
     free(label_end);
     freeRecord($3);
@@ -573,14 +555,43 @@ while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement {
     free(code2);
     free(code3);
     free(code4);
-
-    printf("AAAAAAAAAAAAAAAAA");
 }
 ;
 
 
-for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for_increment PAREN_CLOSE block_statement {printf("for_statement\n");}
-        ;
+for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for_increment PAREN_CLOSE block_statement {
+    printf("for_statement\n");
+
+    char *label_start = generateLabel("for_start");
+    char *label_body = generateLabel("for_body");
+    char *label_end = generateLabel("for_end");
+
+    char *code_init = concat($3->code, ";", "\n", "", "");
+    char *code_condition = concat("if (!(", $5->code, ")) goto ", label_end, ";\n");
+    char *code_increment = concat($7->code, ";\n", "goto ", label_start, ";\n");
+    char *code_body = concat(label_body, ":\n", $9->code, "\n", "");
+
+    char *code = concat(code_init, label_start, ":\n", code_condition, "");
+    char *code2 = concat(code, code_body, code_increment, label_end, ":\n");
+
+    $$ = createRecord(code2, "for_statement");
+
+    free(label_start);
+    free(label_body);
+    free(label_end);
+    freeRecord($3);
+    freeRecord($5);
+    freeRecord($7);
+    freeRecord($9);
+    free(code);
+    free(code2);
+    free(code_init);
+    free(code_condition);
+    free(code_increment);
+    free(code_body);
+}
+;
+
 
 for_initializer: /* epsilon */  {
                     printf("for_initializer\n");

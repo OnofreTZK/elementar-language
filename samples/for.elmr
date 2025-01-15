@@ -1,3 +1,12 @@
-for (int i = 0; i < 10; i++) {
-    x = x + i;
+int main(){
+    int x = 0;
+    for (int i = 0; i < 10; i++) {
+        x = x + i;
+        if(x < 5){
+            print("O x é menor do que 5\n");
+        } else {
+            print("O x não é menor do que 5\n");
+        };
+    };
 };
+
