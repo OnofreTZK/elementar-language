@@ -185,7 +185,8 @@ statement: declaration {
             }
             | while_statement {
                 printf("while_statement\n");
-                $$ = createRecord("TODO","while_statement");
+                $$ = createRecord($1->code,"while_statement");
+                freeRecord($1);
             }
             | for_statement {
                 printf("for_statement\n");
@@ -288,7 +289,13 @@ initialization: type ID ASSIGN expression {
                     code2 = concat(code, $4->code, "", "","");
 
                 } else {
-                    code = concat($1->code," ",$2, ";\n ", $4->code);
+
+                    if(strcmp($4->opt1, "input") == 0){ 
+                        code = concat($1->code," ",$2, ";\n ", $4->code);
+                    } else {
+                       code = concat($1->code," ",$2, " = ", $4->code);
+                    }
+
                     code2 = concat(code, "", "", "", "");
                     $$ = createRecord(code2,"");
                 }
@@ -524,12 +531,52 @@ if_statement: IF PAREN_OPEN expression PAREN_CLOSE block_statement {
         }
         ;
 
-// Utilizar goto para implementar o while
 while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement {
-                    printf("while_statement\n");
+    printf("while_statement\n");
 
-                }
-                ;
+    // Gera rótulos únicos para o início e fim do loop
+    char *label_start = generateLabel("while_start_");
+    char *label_end = generateLabel("while_end_");
+
+    printf("AAAAAAAAAAAAAAAAA");
+
+    // Código gerado para o while
+    char *code = concat(label_start, ":\nif (!(", $3->code, ")) goto ", "");
+
+    //printf("%s\n", code);
+    //printf("========================\n");
+
+    char *code2 = concat(code, label_end, ";\n", "", "");
+
+    //printf("%s\n", code2);
+    //printf("========================\n");
+
+    char *code3 = concat(code2, $5->code, "\ngoto ", label_start, ";\n");
+
+    //printf("%s\n", code3);
+    //printf("========================\n");
+
+    char *code4 = concat(code3, label_end, ":\n", "", "");
+
+    printf("%s\n", code4);
+    printf("========================\n");
+
+    // Cria o registro do código gerado
+    $$ = createRecord(code4, "while_statement");
+
+    // Liberação de memória
+    free(label_start);
+    free(label_end);
+    freeRecord($3);
+    freeRecord($5);
+    free(code);
+    free(code2);
+    free(code3);
+    free(code4);
+
+    printf("AAAAAAAAAAAAAAAAA");
+}
+;
 
 
 for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for_increment PAREN_CLOSE block_statement {printf("for_statement\n");}
