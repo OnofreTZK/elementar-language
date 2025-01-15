@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "./src/util.h"
-#include "./src/record.h"
-#include "./src/file_save.h"
+#include "util.h"
+#include "record.h"
+#include "file_save.h"
 
 int yylex(void);
 int yyerror(char *s);
