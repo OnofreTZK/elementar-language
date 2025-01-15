@@ -13,3 +13,13 @@ build_compiler:
 
 clear_files:
 	@rm -rf lex.yy.c y.gv y.output y.tab.c y.tab.h compiler
+
+build_tests:
+	@gcc -Iinclude src/* test/* -o runner
+
+clean_tests:
+	@rm -rf runner
+
+run_tests: build_tests
+	@./runner
+	@make clean_tests
