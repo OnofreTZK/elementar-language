@@ -7,5 +7,6 @@
 
 
 char * concat(char * s1, char * s2, char * s3, char * s4, char * s5);
+char * generateLabel(const char *prefix);
 
 #endif

@@ -1,0 +1,12 @@
+int main(){
+
+    float x = 11 / 7;
+    float y = 13 / 11;
+    int c = 8;
+
+    float result = x**2 - y + c;
+    print(result);
+
+    //resultado esperado: 9.287569573283859
+
+}
