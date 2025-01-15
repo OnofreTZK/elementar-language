@@ -68,7 +68,7 @@ char* peek(Scope* stack, int position) {
 	}
 
 	if(!label){
-		return "Invalid position";
+		return "";
 	} else {
 		return label;
 	}

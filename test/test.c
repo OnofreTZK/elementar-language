@@ -63,6 +63,30 @@ void topWhenStackIsEmptyShouldReturnedAnEmptyString(){
     free(scope);
 }
 
+void peekWhenEmptyStackShouldRertunAnEmptyString(){
+    Scope* scope = newScopeStack();
+
+    assert(strcmp((peek(scope, 1)), "") == 0);
+
+    free(scope);
+}
+
+void peekShouldWorkInAnyValidPosition(){
+    Scope* scope = newScopeStack();
+
+    push("1", &scope);
+    push("2", &scope);
+    push("3", &scope);
+    push("4", &scope);
+
+    char* firstLabel = peek(scope, 0);
+    char* topLabel = peek(scope, 3);
+    assert(strcmp(firstLabel, "1") == 0);
+    assert(strcmp(topLabel, "4") == 0);
+
+    free(scope);
+}
+
 void scopeStackSuite(){
     newScopeStackCreateAnEmptyStack(); 
     pushInAnEmptyStackShouldWork();
@@ -70,27 +94,12 @@ void scopeStackSuite(){
     popAnEmptyStackShouldReturnAnEmptyString();
     popAStackShouldReturnTheElementAtTop();
     topWhenStackIsEmptyShouldReturnedAnEmptyString();
+    peekWhenEmptyStackShouldRertunAnEmptyString();
+    peekShouldWorkInAnyValidPosition();
 }
 // ************************************************************************************************
 
 int main() {
-    Scope* scope2 = newScopeStack();
-
-    push("1", &scope2);
-    push("2", &scope2);
-    push("3", &scope2);
-    push("4", &scope2);
-
-    int l = 3;
-
-    while(l >= 0) {
-        char* current = peek(scope2, l);
-
-        printf("Current level: %d | Current label: %s\n", l, current);
-
-        l--;
-    }
-
     scopeStackSuite();
     
     return 0;
