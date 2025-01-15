@@ -6,13 +6,19 @@ int main(){
     bool c = true;
     bool d = false;
 
-    if(c){
-        printf("C é true");
-    } else {
-        printf(C é false");
+    if(a =? 20){
+        print("O If funcionou");
     };
 
+
+    if(c =? true){
+        print("C é true");
+    } else {
+        print("C é false");
+    };
+
+    /*
     if(d){
-        printf("D é true");
-    }
+        print("D é true");
+    };*/
 };
