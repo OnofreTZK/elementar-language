@@ -1,63 +1,72 @@
-//Funcionando
-
-/*
-int teste(int a, int b){
-    return a * b;
-};
-*/
-
-
-{
-    print("teste");
-};
-
-for(int i = 0; j < 10; k++){
-    print(i);
-};
-
-
-int b = 10;
-int a;
-a = 20;
-b = a;
-bool c = true;
-
 int main(){
-    b++;
 
-    print(a);
-    print("Hello World");
-    teste();
-    teste(a);
-    teste(a,b);
-    a = teste();
-    a = teste();
-    a = teste(a);
-    a = teste(a,b);
+    string a = "Hello";
+    string b = " World!";
+    string teste = "Hello" + " World";
+    int tamanho = length(teste);
+    print(teste);
+    print("\n");
 
-    print("Hello World");
 
-    if(a =? 10){
-        print("aaaa");
+    float before = 3.14;
+    int after = floatToInt(before);
+
+    if(after =? 3){
+        print("Conversão deu certo!!!\n");
     };
 
-    if(true =? true){
-        a++;
+    int ab = 20;
+    int bb = 20 + 1;
+    print("Hello World!\n");
+
+    bool cb = true;
+    bool db = false;
+
+    if(ab =? 20){
+        print("O If funcionou\n");
     };
+
+
+    if(cb =? true){
+        print("C é true\n");
+    } else {
+        print("C é false\n");
+    };
+
+    if(db){
+        print("D é true\n");
+    };
+
     
-    if(c =? true){
-        print("c é true");
-    };
+    /*
+    print("Vamos ler uma string: \n");
+    string teste2 = readString();
+    print(teste2);
+    print("\n");
+
+    print("Vamos ler um inteiro: \n");
+    int inteiro = readInt();
+
+    print("\n");
+
+    print("Vamos ler um float: \n");
+    float numeroFloat = readFloat();
+
+    print("\n");
+
+    print("Vamos ler um char: \n");
+    char character = readChar();
+
+    print("Vamos printas vários tipos\n");
+    print("\n");
+    print("Inteiro: \n");
+    print(123);
+    print("\n");
+    print("Float: \n");
+    print(1.23);
+    print("\n");
+    print("Char\n");
+    print('c');
+    print("\n");
+    */
 };
-
-if(true){
-    a++;
-};
-
-if(c){
-    a++;
-};
-
-
-//Não Funcionando
-
