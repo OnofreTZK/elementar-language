@@ -616,24 +616,24 @@ function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statem
 
 argument_list: /* epsilon */  {
                 printf("argument_list\n");
-                $$ = createRecord("","argument_list");
+                $$ = createRecord("","argument_list_empty");
             }
             | argument_list_nonempty {
                 printf("argument_list\n");
-                $$ = createRecord($1->code,"");
+                $$ = createRecord($1->code,$1->opt1);
                 freeRecord($1);
             }
             ;
 
 argument_list_nonempty: term  {
             printf("argument_list_nonempty\n");
-            $$ = createRecord($1->code,"");
+            $$ = createRecord($1->code,$1->opt1);
             freeRecord($1);
         }
         |term COMMA argument_list_nonempty {
             char * code = concat($1->code, ",", $3->code, "", "");
             printf("argument_list_nonempty: %s\n", code);
-            $$ = createRecord(code,"");
+            $$ = createRecord(code,"arguments");
             freeRecord($1);
             freeRecord($3);
             free(code);
@@ -643,7 +643,22 @@ function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
         printf("function_call\n");
 
         if(strcmp($1, "print") == 0) { 
-            char * code = concat("printf", "(", $3->code, "", ")");
+
+            char * code;
+            if(strcmp($3->opt1, "string") == 0){
+                code = concat("printf", "(", $3->code, "", ")");
+            } else if(strcmp($3->opt1, "int") == 0){
+                code = concat("printf", "(\"%d\", ", $3->code, "", ")");
+            } else if(strcmp($3->opt1, "decimal") == 0){
+                code = concat("printf", "(\"%f\", ", $3->code, "", ")");
+            } else if(strcmp($3->opt1, "char") == 0){
+                code = concat("printf", "(\"%c\", ", $3->code, "", ")");
+            } else {
+                //Acredito que aqui que eu printo uma variável
+                //TODO: buscar na tabela de simbolos o tipo da variável para que eu possa printar de acordo
+                code = concat("printf", "(", $3->code, ")", "");
+            }
+
             printf("function_call (achei print): %s\n", code);
             $$ = createRecord(code,"print");
             free(code);

@@ -9,21 +9,36 @@ int main(){
     print("Tamanho da variável teste");
     */
     
-    //Print só está funcionando para string
-    //print(tamanho);
 
     print("Vamos ler uma string: \n");
     string teste2 = readString();
     print(teste2);
+    print("\n");
 
     print("Vamos ler um inteiro: \n");
     int inteiro = readInt();
 
+    print("\n");
+
     print("Vamos ler um float: \n");
     float numeroFloat = readFloat();
 
+    print("\n");
+
     print("Vamos ler um char: \n");
     char character = readChar();
+
+    print("Vamos printas vários tipos\n");
+    print("\n");
+    print("Inteiro: \n");
+    print(123);
+    print("\n");
+    print("Float: \n");
+    print(1.23);
+    print("\n");
+    print("Char\n");
+    print('c');
+    print("\n");
     
 
     /*
