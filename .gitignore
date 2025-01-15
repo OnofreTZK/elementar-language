@@ -13,3 +13,11 @@ compiler
 # Outputs
 program
 output.c
+
+
+# IDE
+.vscode
+
+# Outros
+teste
+teste.c
