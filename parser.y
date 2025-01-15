@@ -97,6 +97,12 @@ type: TYPE_INT {$$ = createRecord("int","type int");}
     | TYPE_CHAR {$$ = createRecord("char","type char");}
     | TYPE_BOOL {$$ = createRecord("short int","type bool");}
     | TYPE_STRING {$$ = createRecord("char","type string");}
+    | TYPE_VOID {$$ = createRecord("void","type void");}
+    | TYPE_SHORT {$$ = createRecord("short","type short");}
+    | TYPE_INT BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("int[]","type int[]");}
+    | TYPE_FLOAT BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("float[]","type float[]");}
+    | TYPE_BOOL BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("short int[]","type bool[]");}
+    | TYPE_STRING BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("string[]","type string[]");}
     ;
 
 boolean_operator: OR {
@@ -253,6 +259,8 @@ term: STRING_LITERAL {
 declaration: type ID {
                 printf("VAR Declaration\n");
 
+                //TODO: lidar com a declaração de arrays
+
                 if (strcmp($1->opt1, "type string") == 0) { 
 
                     char * code = concat($1->code, " * ", $2,"", "");
@@ -262,7 +270,7 @@ declaration: type ID {
                     $$ = createRecord(code,"");
                     free(code);
                 } else {
-                    char * code = concat($1->code, $2, "", "", "");
+                    char * code = concat($1->code, " ", $2, "", "");
                     $$ = createRecord(code,"");
                     free(code);
                 }
@@ -273,6 +281,8 @@ declaration: type ID {
 
 initialization: type ID ASSIGN expression {
                 printf("VAR Initialization \n");
+
+                //TODO: lidar com declaração de arrays
 
                 char * code;
                 char * code2;
