@@ -54,14 +54,16 @@ extern FILE *yyin;
 //Salvar programa em arquivo aqui
 program: statement_list SEMICOLON {
             printf("program\n");
-            char * final = concat("#include <stdio.h>\n", $1->code, "", "", "");
+            char * final = concat("#include <stdio.h>\n", "#include <string.h>\n", "#include \"./include/strings.h\"\n",$1->code, "");
             freeRecord($1);
             //salva código em arquivo
             saveCode(final, FILENAME);
 
             const char *executable = PROGRAM_NAME;
             char command[256];
-            snprintf(command, sizeof(command), "gcc -o %s %s", executable, FILENAME);
+
+            //TODO melhorar isso aqui ao pegar os imports
+            snprintf(command, sizeof(command), "gcc %s ./outputs/include/strings.c -o %s", FILENAME, PROGRAM_NAME);
             printf("Compilando o código com o comando: %s\n", command);
 
             int result = system(command);
@@ -90,11 +92,11 @@ statement_list: statement {
             }
             ;
 
-type: TYPE_INT {$$ = createRecord("int","type");}
-    | TYPE_FLOAT {$$ = createRecord("float","type");}
-    | TYPE_CHAR {$$ = createRecord("char","type");}
-    | TYPE_BOOL {$$ = createRecord("short int","type");}
-    | TYPE_STRING {$$ = createRecord("string","type");}
+type: TYPE_INT {$$ = createRecord("int","type int");}
+    | TYPE_FLOAT {$$ = createRecord("float","type float");}
+    | TYPE_CHAR {$$ = createRecord("char","type char");}
+    | TYPE_BOOL {$$ = createRecord("short int","type bool");}
+    | TYPE_STRING {$$ = createRecord("char","type string");}
     ;
 
 boolean_operator: OR {
@@ -246,20 +248,49 @@ term: STRING_LITERAL {
 
 declaration: type ID {
                 printf("VAR Declaration\n");
-                char * code = concat($1->code, $2, "", "", "");
-                $$ = createRecord(code,"");
+
+                if (strcmp($1->opt1, "type string") == 0) { 
+
+                    char * code = concat($1->code, " * ", $2,"", "");
+
+                    printf("|||||||| declaration: %s\n", code);
+
+                    $$ = createRecord(code,"");
+                    free(code);
+                } else {
+                    char * code = concat($1->code, $2, "", "", "");
+                    $$ = createRecord(code,"");
+                    free(code);
+                }
+
                 freeRecord($1);
-                free(code);
             }
             ;  
 
 initialization: type ID ASSIGN expression {
                 printf("VAR Initialization\n");
-                char * code = concat($1->code," ",$2, " = ", $4->code);
-                $$ = createRecord(code,"");
+
+                if (strcmp($1->opt1, "type string") == 0) { 
+                 
+                    //TODO: passar da expressão o tamanho da string
+                    //TODO: definir o tamanho da string pela expressão
+                    //TODO: é para gerar um erro aqui caso a expressão não seja uma string
+                  
+                    char * code = concat($1->code, " * ", $2, " = ", "");
+                    char * code2 = concat(code, $4->code, "", "","");
+
+                    printf("initialization: %s\n", code2);
+                    $$ = createRecord(code2,"");
+                    free(code);
+                    free(code2);
+                 
+                } else {
+                    char * code = concat($1->code, $2, " = ", $4->code, "");
+                    $$ = createRecord(code,"");
+                    free(code);
+                }
                 freeRecord($1);
                 freeRecord($4);
-                free(code);
             }
             ;  
 
@@ -278,7 +309,7 @@ assignment: ID ASSIGN expression {
 */
 unary_expression: term {
                     printf("codigo: %s\n", $1->code);
-                    $$ = createRecord($1->code,"");
+                    $$ = createRecord($1->code,$1->opt1);
                     freeRecord($1);
                 }                                    
                 | term INCREMENT {
@@ -287,8 +318,8 @@ unary_expression: term {
                     char * code = concat($1->code, "++", "", "", "");
                     printf("codigo: %s\n", code);
 
+                    $$ = createRecord(code,$1->opt1);
                     freeRecord($1);
-                    $$ = createRecord(code,"");
                     free(code);
                 }
                 | term DECREMENT {
@@ -297,25 +328,48 @@ unary_expression: term {
                     char * code = concat($1->code, "--", "", "", "");
                     printf("codigo: %s\n", code);
 
+                    $$ = createRecord(code,$1->opt1);
                     freeRecord($1);
-                    $$ = createRecord(code,"");
                     free(code);
                 }
                 ;
 
 arithmetic_expression: unary_expression {
                         printf("unary_expression\n");
-                        $$ = createRecord($1->code,"");
+                        $$ = createRecord($1->code,$1->opt1);
                         freeRecord($1);
                     }
                     | arithmetic_expression arithmetic_operator unary_expression {
-                        char * code = concat($1->code, $2->code, $3->code, "", "");
-                        printf("arithmetic_expression: %s\n", code);
-                        $$ = createRecord(code,"");
+
+                        printf("AQUIIIIIIIIIII\n");
+                        printf("%s\n",$1->opt1);
+                        printf("%s\n",$3->opt1);
+                        
+                        if(strcmp($1->opt1, "string") == 0 && strcmp($3->opt1, "string") == 0) {
+
+                            // TODO: checar se o operador é soma. Do contrário gerar erro
+                            // TODO: ver o que acontece quando algum dos lados for uma chamada de função ou id
+
+                            char * code = concat("concat(", $1->code, ",", $3->code, ")");
+                            $$ = createRecord(code,"string");
+                            free(code);
+
+                        } else {
+                           
+                            char * code = concat($1->code, $2->code, $3->code, "", "");
+                            printf("arithmetic_expression: %s\n", code);
+
+                            $$ = createRecord(code,"");
+                            free(code);
+
+                        }
+
+                        // Checar se é soma de 2 strings. Se for, usar strcat
+
                         freeRecord($1);
                         freeRecord($2);
                         freeRecord($3);
-                        free(code);
+                       
                     }
                     ;
 

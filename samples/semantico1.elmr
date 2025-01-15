@@ -1,4 +1,18 @@
 int main(){
+
+    string a = "Hello";
+    string b = " World!";
+    string teste = "Hello" + " World";
+    print(teste);
+
+    /*
+    string teste2 = "Hello" + "World";
+
+    print(teste);
+    print(teste2);
+    */
+
+    /*
     int a = 20;
     int b = 20 + 1;
     print("Hello World!");
@@ -17,8 +31,9 @@ int main(){
         print("C é false");
     };
 
-    /*
     if(d){
         print("D é true");
-    };*/
+    };
+
+    */
 };

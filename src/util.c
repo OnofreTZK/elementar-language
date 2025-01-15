@@ -22,12 +22,12 @@ char * concat(char * s1, char * s2, char * s3, char * s4, char * s5){
 }
 
 
-char *generateLabel(const char *prefix) {
-    char *label = malloc(32); 
-    if (label == NULL) {
-      fprintf(stderr, "Erro ao alocar memória para label.\n");
-      exit(1);
-    }
-    snprintf(label, 32, "%s_%d", prefix, label_counter++); 
-    return label;
+char * generateLabel(const char *prefix) {
+  char *label = malloc(32); 
+  if (label == NULL) {
+    fprintf(stderr, "Erro ao alocar memória para label.\n");
+    exit(1);
+  }
+  snprintf(label, 32, "%s_%d", prefix, label_counter++); 
+  return label;
 }
