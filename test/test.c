@@ -1,22 +1,79 @@
 #include <stdio.h>
+#include <assert.h>
+#include <string.h>
 #include "types.h"
 #include "scope_stack.h"
 
-int main() {
+// Scope Stack tests
+// ************************************************************************************************
+void newScopeStackCreateAnEmptyStack(){
     Scope* scope = newScopeStack();
 
+    assert(!scope);
+
+    free(scope);
+}
+
+void pushInAnEmptyStackShouldWork(){
+    Scope* scope = newScopeStack();
+
+    push("1", &scope);
+    
+    assert(strcmp(top(scope), "1") == 0);
+
+    free(scope);
+}
+
+void pushInANotEmptyStackShouldWork(){
+    Scope* scope = newScopeStack();
+
+    push("1", &scope);
     push("2", &scope);
-    push("3", &scope);
+    
+    assert(strcmp(top(scope), "2") == 0);
 
-    char* topValue = top(scope);
-    printf("Top value: %s\n", topValue);
+    free(scope);
+}
 
-    while(scope != NULL) {
-        char* currentScope = pop(&scope);
+void popAnEmptyStackShouldReturnAnEmptyString(){
+    Scope* scope = newScopeStack();
 
-        printf(">>> %s\n", currentScope);
-    }
+    assert(strcmp((pop(&scope)), "") == 0);
 
+    free(scope);
+}
+
+void popAStackShouldReturnTheElementAtTop(){
+    Scope* scope = newScopeStack();
+
+    push("1", &scope);
+    push("2", &scope);
+    char* element = top(scope);
+
+    assert(strcmp((pop(&scope)), element) == 0);
+
+    free(scope);
+}
+
+void topWhenStackIsEmptyShouldReturnedAnEmptyString(){
+    Scope* scope = newScopeStack();
+
+    assert(strcmp((top(scope)), "") == 0);
+
+    free(scope);
+}
+
+void scopeStackSuite(){
+    newScopeStackCreateAnEmptyStack(); 
+    pushInAnEmptyStackShouldWork();
+    pushInANotEmptyStackShouldWork();
+    popAnEmptyStackShouldReturnAnEmptyString();
+    popAStackShouldReturnTheElementAtTop();
+    topWhenStackIsEmptyShouldReturnedAnEmptyString();
+}
+// ************************************************************************************************
+
+int main() {
     Scope* scope2 = newScopeStack();
 
     push("1", &scope2);
@@ -33,6 +90,8 @@ int main() {
 
         l--;
     }
+
+    scopeStackSuite();
     
     return 0;
 }

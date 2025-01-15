@@ -34,7 +34,7 @@ void push(char* scope, Scope** stack) {
 
 char * pop(Scope** stack) {
 	if (!*stack) {
-		return "Out of scopes";
+		return "";
 	} else {
 		Scope* temp = *stack;
 
@@ -49,6 +49,10 @@ char * pop(Scope** stack) {
 } 
 
 char* top(Scope* stack){
+	if(!stack){
+		return "";
+	} 
+	
 	return stack->label;
 }
 
