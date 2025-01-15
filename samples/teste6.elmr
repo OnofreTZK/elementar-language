@@ -6,7 +6,14 @@ int main(){
     int tamanho = length(teste);
     print(teste);
     print("\n");
-    print("Tamanho da variável teste\n");
+
+
+    float before = 3.14;
+    int after = floatToInt(before);
+
+    if(after =? 3){
+        print("Conversão deu certo!!!\n");
+    };
 
     int ab = 20;
     int bb = 20 + 1;

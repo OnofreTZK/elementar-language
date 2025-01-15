@@ -54,7 +54,12 @@ extern FILE *yyin;
 //Salvar programa em arquivo aqui
 program: statement_list SEMICOLON {
             printf("program\n");
-            char * final = concat("#include <stdio.h>\n", "#include <string.h>\n", "#include \"./include/strings.h\"\n",$1->code, "");
+            char * final = concat(
+                "#include <stdio.h>\n", 
+                "#include <string.h>\n", 
+                "#include \"./include/strings.h\"\n",
+                "#include \"./include/type-conversions.h\"\n", 
+                $1->code);
             freeRecord($1);
             //salva código em arquivo
             saveCode(final, FILENAME);
@@ -63,7 +68,7 @@ program: statement_list SEMICOLON {
             char command[256];
 
             //TODO melhorar isso aqui ao pegar os imports
-            snprintf(command, sizeof(command), "gcc %s ./outputs/include/strings.c -o %s", FILENAME, PROGRAM_NAME);
+            snprintf(command, sizeof(command), "gcc %s ./outputs/include/strings.c ./outputs/include/type-conversions.c -o %s", FILENAME, PROGRAM_NAME);
             printf("Compiling the code with the command: %s\n", command);
 
             int result = system(command);
