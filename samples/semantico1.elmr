@@ -1,9 +1,30 @@
 int main(){
 
+    /*
     string a = "Hello";
     string b = " World!";
     string teste = "Hello" + " World";
+    int tamanho = length(teste);
     print(teste);
+    print("Tamanho da variável teste");
+    */
+    
+    //Print só está funcionando para string
+    //print(tamanho);
+
+    print("Vamos ler uma string: \n");
+    string teste2 = readString();
+    print(teste2);
+
+    print("Vamos ler um inteiro: \n");
+    int inteiro = readInt();
+
+    print("Vamos ler um float: \n");
+    float numeroFloat = readFloat();
+
+    print("Vamos ler um char: \n");
+    char character = readChar();
+    
 
     /*
     string teste2 = "Hello" + "World";

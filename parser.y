@@ -168,8 +168,9 @@ statement: declaration {
                 freeRecord($1);
             }
             | assignment {
-                $$ = createRecord($1->code,"");
+                $$ = createRecord($1->code,$1->code);
                 printf("assignment: %s\n", $1->code);
+                printf("dado aqui no declaration: %s\n", $1->opt1);
                 freeRecord($1);
             }
             | main {
@@ -196,7 +197,7 @@ statement: declaration {
                 freeRecord($1);
             }
             | block_statement {
-                $$ = createRecord($1->code,"");
+                $$ = createRecord($1->code,$1->opt1);
                 printf("block_statement 0: %s\n", $1->code);
                 freeRecord($1);
             }
@@ -206,8 +207,9 @@ statement: declaration {
                 freeRecord($1);
             }
             | expression {
-                $$ = createRecord($1->code,"");
+                $$ = createRecord($1->code,$1->opt1);
                 printf("expression: %s\n", $1->code);
+                printf("expression 2 (opt): %s\n", $1->opt1);
                 freeRecord($1);
             }
             | SEMICOLON {
@@ -253,7 +255,7 @@ declaration: type ID {
 
                     char * code = concat($1->code, " * ", $2,"", "");
 
-                    printf("|||||||| declaration: %s\n", code);
+                    printf("declaration: %s\n", code);
 
                     $$ = createRecord(code,"");
                     free(code);
@@ -268,27 +270,48 @@ declaration: type ID {
             ;  
 
 initialization: type ID ASSIGN expression {
-                printf("VAR Initialization\n");
+                printf("VAR Initialization \n");
+
+                char * code;
+                char * code2;
 
                 if (strcmp($1->opt1, "type string") == 0) { 
-                 
                     //TODO: passar da expressão o tamanho da string
                     //TODO: definir o tamanho da string pela expressão
                     //TODO: é para gerar um erro aqui caso a expressão não seja uma string
-                  
-                    char * code = concat($1->code, " * ", $2, " = ", "");
-                    char * code2 = concat(code, $4->code, "", "","");
 
-                    printf("initialization: %s\n", code2);
-                    $$ = createRecord(code2,"");
-                    free(code);
-                    free(code2);
-                 
+                    if(strcmp($4->opt1, "input") == 0){ //Faz a alocação para a string
+                        code = concat($1->code, " * ", $2, " = (char *)malloc(100 * sizeof(char));\n", "");
+                    } else {
+                        code = concat($1->code, " * ", $2, " = ", "");
+                    }
+                    code2 = concat(code, $4->code, "", "","");
+
                 } else {
-                    char * code = concat($1->code, $2, " = ", $4->code, "");
-                    $$ = createRecord(code,"");
-                    free(code);
+                    code = concat($1->code," ",$2, ";\n ", $4->code);
+                    code2 = concat(code, "", "", "", "");
+                    $$ = createRecord(code2,"");
                 }
+
+                if(strcmp($4->opt1, "input") == 0) {
+
+                    char * code3;
+                    if (strcmp($1->opt1, "type string") == 0){
+                        code3 = concat(code2, $2, ")", "", "");
+                    } else {
+                        code3 = concat(code2, "&",$2, ")", "");
+                    }
+                    $$ = createRecord(code3,"");
+                    free(code3);
+
+                } else {
+                    $$ = createRecord(code2,"");
+                }
+
+                printf("initialization: %s\n", code2);
+                
+                free(code);
+                free(code2);
                 freeRecord($1);
                 freeRecord($4);
             }
@@ -296,13 +319,20 @@ initialization: type ID ASSIGN expression {
 
 assignment: ID ASSIGN expression {
                 printf("Assignment\n");
-                char * code = concat($1, "=", $3->code, "", "");
-                $$ = createRecord(code,"");
-                freeRecord($3);
-                free(code);
+
+                //Coloca a variável que vai receber o valor do input
+                if(strcmp($3->opt1, "input") == 0) {
+                    char * code = concat($1, "=", $3->code,$1, ")");
+                    free(code);
+
+                } else {
+                    char * code = concat($1, "=", $3->code, "", "");
+                    $$ = createRecord(code,"");
+                    free(code);
+                }
+                freeRecord($3);               
             }
             ;  
-
 
 /* 
 - Checar tipos para não permitir coisas como ++<string>
@@ -414,18 +444,19 @@ boolean_expression: relational_expression {
                     ;
 
 expression: PAREN_OPEN expression PAREN_CLOSE {
-            $$ = createRecord($2->code,"");
+            $$ = createRecord($2->code, $2->opt1);
             printf("expression 1: %s\n", $2->code);
             freeRecord($2);
         }
         | boolean_expression {
-            $$ = createRecord($1->code,"");
+            $$ = createRecord($1->code,$1->opt1);
             printf("boolean_expression 3: %s\n", $1->code);
             freeRecord($1);
         }
         | function_call {
             printf("function_call\n");
-            $$ = createRecord($1->code,"");
+            printf("dado recebido aqui: %s\n", $1->opt1);
+            $$ = createRecord($1->code,$1->opt1);
             freeRecord($1);
         }
         ;
@@ -510,12 +541,12 @@ for_initializer: /* epsilon */  {
                 }    
                 | initialization {
                     printf("for_initializer\n");
-                    $$ = createRecord($1->code,"");
+                    $$ = createRecord($1->code,$1->opt1);
                     freeRecord($1);
                 }
                 | assignment {
                     printf("for_initializer\n");
-                    $$ = createRecord($1->code,"");
+                    $$ = createRecord($1->code,$1->opt1);
                     freeRecord($1);
                 }
                 ;    
@@ -532,7 +563,11 @@ for_increment: ID INCREMENT {
                 $$ = createRecord(code,"");
                 free(code);
             }
-            | assignment
+            | assignment {
+                printf("for_assignment\n");
+                $$ = createRecord($1->code,$1->opt1);
+                freeRecord($1);
+            }
             ;
 
 parameter_list: /* epsilon */ {
@@ -610,8 +645,29 @@ function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
         if(strcmp($1, "print") == 0) { 
             char * code = concat("printf", "(", $3->code, "", ")");
             printf("function_call (achei print): %s\n", code);
-            $$ = createRecord(code,"");
+            $$ = createRecord(code,"print");
             free(code);
+
+        } else if(strcmp($1, "length") == 0){
+            char * code = concat("strlen", "(", $3->code, "", ")");
+            printf("function_call (achei length): %s\n", code);
+            $$ = createRecord(code,"length");
+
+        } else if(strcmp($1, "readString") == 0){
+            char * code = concat("scanf(\"%s\", ", "","","","");
+            $$ = createRecord(code,"input");
+
+        } else if(strcmp($1, "readInt") == 0){
+            char * code = concat("scanf(\"%d\", ", "","","","");
+            $$ = createRecord(code,"input");
+
+        } else if(strcmp($1, "readFloat") == 0){
+            char * code = concat("scanf(\"%f\", ", "","","","");
+            $$ = createRecord(code,"input");
+
+        } else if(strcmp($1, "readChar") == 0){
+            char * code = concat("scanf(\" %c\", ", "","","","");
+            $$ = createRecord(code,"input");
 
         } else {
             char * code = concat($1, "(", $3->code, ")", ""); 
