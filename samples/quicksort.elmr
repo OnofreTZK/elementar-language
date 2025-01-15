@@ -1,9 +1,10 @@
 int[] ordenar(int[] numeros){
-	if (numeros.length() < 2){
-		return numeros;
-	}
 
-	int pivo = numeros[numeros.length() -1];
+	if (length(numeros) < 2){
+		return numeros;
+	};
+
+	int pivo = numeros[length(numeros) -1];
 	int[] direita = [];
 	int[] esquerda = [];
 
@@ -11,20 +12,20 @@ int[] ordenar(int[] numeros){
 	int k = 0;
 	int pivoIndex = null;
 
-	while(k < numeros.length()){
+	while(k < length(numeros)){
 		if(numeros[k] <= pivo){
 			j += 1;
 			int temp = numeros[j];
 			numeros[j] = numeros[k];
 			numeros[k] = temp;
 
-			if(k =? numeros.length() - 1){
+			if(k =? length(numeros) - 1){
 				pivoIndex = j;
-			}
-		}
+			};
+		};
 		k += 1;
 
-	}
+	};
 	int[] pivoList = [pivot];
 	return ordenar(esquerda) + pivoList + ordenar(direita);
 

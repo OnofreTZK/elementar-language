@@ -1,48 +1,63 @@
 //Funcionando
+
+/*
+int teste(int a, int b){
+    return a * b;
+};
+*/
+
+
+{
+    print("teste");
+};
+
+for(int i = 0; j < 10; k++){
+    print(i);
+};
+
+
 int b = 10;
 int a;
 a = 20;
 b = a;
 bool c = true;
+
 int main(){
     b++;
+
     print(a);
+    print("Hello World");
+    teste();
+    teste(a);
+    teste(a,b);
     a = teste();
     a = teste();
     a = teste(a);
     a = teste(a,b);
+
     print("Hello World");
 
     if(a =? 10){
         print("aaaa");
-    }
+    };
 
     if(true =? true){
         a++;
-    }
+    };
     
     if(c =? true){
         print("c é true");
-    }
+    };
+};
 
-    
-}
+if(true){
+    a++;
+};
+
+if(c){
+    a++;
+};
 
 
 //Não Funcionando
 
-/*
-if(true){
-    a++;
-}
-
-if(c){
-    a++;
-}
-
-for(int i = 0; i < 10; i++){
-    print(i);
-}
-
-
-*/

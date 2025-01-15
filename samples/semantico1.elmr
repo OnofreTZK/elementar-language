@@ -1,0 +1,75 @@
+int main(){
+
+    /*
+    string a = "Hello";
+    string b = " World!";
+    string teste = "Hello" + " World";
+    int tamanho = length(teste);
+    print(teste);
+    print("Tamanho da variável teste");
+    */
+    
+
+    print("Vamos ler uma string: \n");
+    string teste2 = readString();
+    print(teste2);
+    print("\n");
+
+    print("Vamos ler um inteiro: \n");
+    int inteiro = readInt();
+
+    print("\n");
+
+    print("Vamos ler um float: \n");
+    float numeroFloat = readFloat();
+
+    print("\n");
+
+    print("Vamos ler um char: \n");
+    char character = readChar();
+
+    print("Vamos printas vários tipos\n");
+    print("\n");
+    print("Inteiro: \n");
+    print(123);
+    print("\n");
+    print("Float: \n");
+    print(1.23);
+    print("\n");
+    print("Char\n");
+    print('c');
+    print("\n");
+    
+
+    /*
+    string teste2 = "Hello" + "World";
+
+    print(teste);
+    print(teste2);
+    */
+
+    /*
+    int a = 20;
+    int b = 20 + 1;
+    print("Hello World!");
+
+    bool c = true;
+    bool d = false;
+
+    if(a =? 20){
+        print("O If funcionou");
+    };
+
+
+    if(c =? true){
+        print("C é true");
+    } else {
+        print("C é false");
+    };
+
+    if(d){
+        print("D é true");
+    };
+
+    */
+};

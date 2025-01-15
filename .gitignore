@@ -4,7 +4,20 @@ y.tab.c
 y.gv
 y.output
 y.tab.h
+y.dot
+y.vcg
 
 # Executable
 compiler
+
+# Outputs
+program
+output.c
+
+# IDE
+.vscode
+
+# Outros
+teste
+teste.c
 runner
