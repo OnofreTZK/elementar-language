@@ -14,8 +14,8 @@ extern int yylineno;
 extern char *yytext;
 extern FILE *yyin;
 
-Scope* scopeStack = NULL;
-SymbolTable* symbolTable = NULL;
+//Scope* scopeStack = newScopeStack();
+//SymbolTable* symbolTable = createSymbolTable();
 
 #define FILENAME "./outputs/output.c"
 #define PROGRAM_NAME "./outputs/program"
@@ -27,10 +27,9 @@ SymbolTable* symbolTable = NULL;
 	struct record * rec;
 };
 
-//inicializa o scope_stack e a tabela de símbolos globalmente
 
 
-%token <sValue> ID STRING_LITERAL INT DECIMAL CHAR_LITERAL
+%token <sValue> ID STRING_LITERAL INT FLOAT DOUBLE CHAR_LITERAL
 
 %token TYPE_INT TYPE_VOID CONST TYPE_CHAR TYPE_STRUCT TYPE_STRING TYPE_SHORT 
        TYPE_UNSIGNED_INT TYPE_FLOAT TYPE_DOUBLE TYPE_LONG IF ELSE WHILE RETURN MAIN TYPE_BOOL
@@ -58,15 +57,16 @@ SymbolTable* symbolTable = NULL;
 
 %%
 
-//Salvar programa em arquivo aqui
 program: statement_list SEMICOLON {
             printf("program\n");
-            char * final = concat(
+            char * includes = concat(
                 "#include <stdio.h>\n", 
                 "#include <string.h>\n", 
+                "#include <math.h>\n", 
                 "#include \"./include/strings.h\"\n",
-                "#include \"./include/type-conversions.h\"\n", 
-                $1->code);
+                "#include \"./include/type-conversions.h\"\n");
+
+            char * final = concat(includes, $1->code, "", "", "");
             freeRecord($1);
             //salva código em arquivo
             saveCode(final, FILENAME);
@@ -75,7 +75,7 @@ program: statement_list SEMICOLON {
             char command[256];
 
             //TODO melhorar isso aqui ao pegar os imports
-            snprintf(command, sizeof(command), "gcc %s ./outputs/include/strings.c ./outputs/include/type-conversions.c -o %s", FILENAME, PROGRAM_NAME);
+            snprintf(command, sizeof(command), "gcc %s ./outputs/include/strings.c ./outputs/include/type-conversions.c ./outputs/include/exponent.c -lm -o %s", FILENAME, PROGRAM_NAME);
             printf("Compiling the code with the command: %s\n", command);
 
             int result = system(command);
@@ -173,6 +173,10 @@ arithmetic_operator: PLUS {
                     printf("MODULO\n");
                     $$ = createRecord("%","operator");
                 }
+                | EXPONENT {
+                    printf("EXPONENT\n");
+                    $$ = createRecord("^","exponent");
+                }
                 ;
 
 statement: declaration {
@@ -246,9 +250,13 @@ term: STRING_LITERAL {
         printf("INT\n");
         $$ = createRecord($1,"int");
     }
-    | DECIMAL  {
-        printf("DECIMAL\n");
-        $$ = createRecord($1,"decimal");
+    | FLOAT  {
+        printf("FLOAT\n");
+        $$ = createRecord($1,"float");
+    }
+    | DOUBLE  {
+        printf("DOUBLE\n");
+        $$ = createRecord($1,"double");
     }
     | TRUE {
         printf("True\n"); 
@@ -271,11 +279,11 @@ term: STRING_LITERAL {
 declaration: type ID {
                 printf("VAR Declaration\n");
 
-                char* currentScope = top(scopeStack);
+                //char* currentScope = top(scopeStack);
 
                 //TODO: checar aqui se a variável já foi declarada
 
-                setKeyValue(&symbolTable, currentScope, $2, $1->code);
+                //setKeyValue(&symbolTable, currentScope, $2, $1->code);
 
                 //TODO: lidar com a declaração de arrays
 
@@ -300,15 +308,15 @@ declaration: type ID {
 initialization: type ID ASSIGN expression {
                 printf("VAR Initialization \n");
 
-                char* currentScope = top(scopeStack);
+                //char* currentScope = top(scopeStack);
 
                 //TODO: checar aqui se a variável já foi declarada
 
-                printf("currentScope: %s\n", currentScope);
-                printf("nome da variável: %s\n", $2);
-                printf("tipo da variável: %s\n", $1->code);
+                //printf("currentScope: %s\n", currentScope);
+                //printf("nome da variável: %s\n", $2);
+                //printf("tipo da variável: %s\n", $1->code);
 
-                setKeyValue(&symbolTable, currentScope, $2, $1->code);
+               // setKeyValue(&symbolTable, currentScope, $2, $1->code);
 
 
                 //TODO: lidar com declaração de arrays
@@ -418,11 +426,38 @@ arithmetic_expression: unary_expression {
                     }
                     | arithmetic_expression arithmetic_operator unary_expression {
 
-                        printf("AQUIIIIIIIIIII\n");
-                        printf("%s\n",$1->opt1);
-                        printf("%s\n",$3->opt1);
+                        //TODO: se $3->opt1 for "id", checar o tipo da variável na tabela
+                        //Usar uma variável para conter o tipo da variável da tabela ou $3->opt1, não acessando $3->opt1 diretamente
+
+                        printf("AAAAAAAAAAAAAAA\n\n\n");
+                        printf("%s\n", $3->opt1);
+
                         
-                        if(strcmp($1->opt1, "string") == 0 && strcmp($3->opt1, "string") == 0) {
+                        if(strcmp($3->opt1, "int") == 0 && strcmp($2->code, "^") == 0){
+
+                            char * code = concat("int_pow(", $1->code, ",", $3->code, ")");
+                            printf("arithmetic_expression (int pow): %s\n", code);
+
+                            $$ = createRecord(code,"");
+                            free(code);
+
+                        } else if (strcmp($3->opt1, "float") == 0 && strcmp($2->code, "^") == 0) {
+
+                            char * code = concat("powf(", $1->code, ",", $3->code, ")");
+                            printf("arithmetic_expression (float pow): %s\n", code);
+
+                            $$ = createRecord(code,"");
+                            free(code);
+
+                         } else if (strcmp($3->opt1, "double") == 0 && strcmp($2->code, "^")  == 0) {
+
+                            char * code = concat("pow(", $1->code, ",", $3->code, ")");
+                            printf("arithmetic_expression (double pow): %s\n", code);
+
+                            $$ = createRecord(code,"");
+                            free(code);
+
+                        } else if(strcmp($1->opt1, "string") == 0 && strcmp($3->opt1, "string") == 0) {
 
                             // TODO: checar se o operador é soma. Do contrário gerar erro
                             // TODO: ver o que acontece quando algum dos lados for uma chamada de função ou id
@@ -432,9 +467,10 @@ arithmetic_expression: unary_expression {
                             free(code);
 
                         } else {
+
                            
                             char * code = concat($1->code, $2->code, $3->code, "", "");
-                            printf("arithmetic_expression: %s\n", code);
+                            printf("arithmetic_expression 42: %s\n", code);
 
                             $$ = createRecord(code,"");
                             free(code);
@@ -698,9 +734,9 @@ parameter_list_nonempty: type ID {
              
 function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement {
             printf("function_declaration\n");
-            char * code = concat($1->code, $2, "(", $4->code, ")");
-            char * code2 = concat(code, $6->code, "", "", "");
-            $$ = createRecord(code,"");
+            char * code = concat($1->code, " ", $2, "(", $4->code);
+            char * code2 = concat(code, ")", $6->code, "", "");
+            $$ = createRecord(code2,"");
             freeRecord($1);
             freeRecord($4);
             freeRecord($6);
@@ -752,19 +788,19 @@ function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
                 code = concat("printf", "(\"%c\", ", $3->code, "", ")");
             } else if(strcmp($3->opt1, "id") == 0){
 
-                printf("ENTROU AQUIIIIIIII\n");
-                printf("tipo encontrado: %s\n", $3->opt1);
+                //printf("ENTROU AQUIIIIIIII\n");
+                printf("é um: %s\n", $3->opt1);
 
                 //TODO: modificar isso aqui para procurar nos escopos??
-                char* currentScope = top(scopeStack);
+                //char* currentScope = top(scopeStack);
 
-                printf("currentScope: %s\n", currentScope);
-                printf("nome da variável: %s\n", $3->code);
+                //printf("currentScope: %s\n", currentScope);
+                //printf("nome da variável: %s\n", $3->code);
 
                 //busca tipo da variável no escopo
-                char * type = getValue(&symbolTable, top(scopeStack), $3->code);
+                //char * type = getValue(&symbolTable, currentScope, $3->code);
 
-                printf("value: %s\n", type);
+                //printf("value: %s\n", type);
 
                 code = concat("printf", "(\"%c\", ", $3->code, "", ")");
 
@@ -831,6 +867,7 @@ int yyerror(char *msg) {
     fprintf(stderr, "%d: %s at '%s'\n", yylineno, msg, yytext);
     return 0;
 }
+
 #define EXTENSION "elmr"
 
 char* get_extension(char* pointer, int len) {
@@ -847,6 +884,7 @@ char* get_extension(char* pointer, int len) {
 }
 
 int main(int argc, char *argv[]) { 
+
     if (argc != 2) {
         printf("Usage: %s <source file>\n", argv[0]);
         return 1;
@@ -876,17 +914,11 @@ int main(int argc, char *argv[]) {
         printf("Error: Cannot open file %s\n", input_file);
         return 1;
     }
-
-    scopeStack = newScopeStack();
-
-    push("global", &scopeStack);
-
-    symbolTable = createSymbolTable();
-
+    
     yyparse(); 
 
-    destroyStack(&scopeStack);
-    destroyTable(&symbolTable);
+    //destroyStack(&scopeStack);
+    //destroyTable(&symbolTable);
 
     fclose(yyin);
     return 0;
