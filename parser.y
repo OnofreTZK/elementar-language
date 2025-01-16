@@ -5,12 +5,17 @@
 #include "util.h"
 #include "record.h"
 #include "file_save.h"
+#include "symbol_table.h"
+#include "scope_stack.h"
 
 int yylex(void);
 int yyerror(char *s);
 extern int yylineno;
 extern char *yytext;
 extern FILE *yyin;
+
+Scope* scopeStack = NULL;
+SymbolTable* symbolTable = NULL;
 
 #define FILENAME "./outputs/output.c"
 #define PROGRAM_NAME "./outputs/program"
@@ -20,7 +25,9 @@ extern FILE *yyin;
 %union {
 	char * sValue; 
 	struct record * rec;
- };
+};
+
+//inicializa o scope_stack e a tabela de símbolos globalmente
 
 
 %token <sValue> ID STRING_LITERAL INT DECIMAL CHAR_LITERAL
@@ -264,6 +271,12 @@ term: STRING_LITERAL {
 declaration: type ID {
                 printf("VAR Declaration\n");
 
+                char* currentScope = top(scopeStack);
+
+                //TODO: checar aqui se a variável já foi declarada
+
+                setKeyValue(&symbolTable, currentScope, $2, $1->code);
+
                 //TODO: lidar com a declaração de arrays
 
                 if (strcmp($1->opt1, "type string") == 0) { 
@@ -286,6 +299,17 @@ declaration: type ID {
 
 initialization: type ID ASSIGN expression {
                 printf("VAR Initialization \n");
+
+                char* currentScope = top(scopeStack);
+
+                //TODO: checar aqui se a variável já foi declarada
+
+                printf("currentScope: %s\n", currentScope);
+                printf("nome da variável: %s\n", $2);
+                printf("tipo da variável: %s\n", $1->code);
+
+                setKeyValue(&symbolTable, currentScope, $2, $1->code);
+
 
                 //TODO: lidar com declaração de arrays
 
@@ -726,9 +750,25 @@ function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
                 code = concat("printf", "(\"%f\", ", $3->code, "", ")");
             } else if(strcmp($3->opt1, "char") == 0){
                 code = concat("printf", "(\"%c\", ", $3->code, "", ")");
+            } else if(strcmp($3->opt1, "id") == 0){
+
+                printf("ENTROU AQUIIIIIIII\n");
+                printf("tipo encontrado: %s\n", $3->opt1);
+
+                //TODO: modificar isso aqui para procurar nos escopos??
+                char* currentScope = top(scopeStack);
+
+                printf("currentScope: %s\n", currentScope);
+                printf("nome da variável: %s\n", $3->code);
+
+                //busca tipo da variável no escopo
+                char * type = getValue(&symbolTable, top(scopeStack), $3->code);
+
+                printf("value: %s\n", type);
+
+                code = concat("printf", "(\"%c\", ", $3->code, "", ")");
+
             } else {
-                //Acredito que aqui que eu printo uma variável
-                //TODO: buscar na tabela de simbolos o tipo da variável para que eu possa printar de acordo
                 code = concat("printf", "(", $3->code, ")", "");
             }
 
@@ -837,7 +877,16 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    yyparse();  
+    scopeStack = newScopeStack();
+
+    push("global", &scopeStack);
+
+    symbolTable = createSymbolTable();
+
+    yyparse(); 
+
+    destroyStack(&scopeStack);
+    destroyTable(&symbolTable);
 
     fclose(yyin);
     return 0;
