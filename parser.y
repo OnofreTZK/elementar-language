@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "./src/util.h"
-#include "./src/record.h"
-#include "./src/file_save.h"
+#include "util.h"
+#include "record.h"
+#include "file_save.h"
 
 int yylex(void);
 int yyerror(char *s);
@@ -54,7 +54,12 @@ extern FILE *yyin;
 //Salvar programa em arquivo aqui
 program: statement_list SEMICOLON {
             printf("program\n");
-            char * final = concat("#include <stdio.h>\n", "#include <string.h>\n", "#include \"./include/strings.h\"\n",$1->code, "");
+            char * final = concat(
+                "#include <stdio.h>\n", 
+                "#include <string.h>\n", 
+                "#include \"./include/strings.h\"\n",
+                "#include \"./include/type-conversions.h\"\n", 
+                $1->code);
             freeRecord($1);
             //salva código em arquivo
             saveCode(final, FILENAME);
@@ -63,14 +68,14 @@ program: statement_list SEMICOLON {
             char command[256];
 
             //TODO melhorar isso aqui ao pegar os imports
-            snprintf(command, sizeof(command), "gcc %s ./outputs/include/strings.c -o %s", FILENAME, PROGRAM_NAME);
-            printf("Compilando o código com o comando: %s\n", command);
+            snprintf(command, sizeof(command), "gcc %s ./outputs/include/strings.c ./outputs/include/type-conversions.c -o %s", FILENAME, PROGRAM_NAME);
+            printf("Compiling the code with the command: %s\n", command);
 
             int result = system(command);
             if (result == 0) {
-                printf("Código compilado com sucesso! Executável gerado: %s\n", executable);
+                printf("Code compiled succesfully! Executor generated: %s\n", executable);
             } else {
-                fprintf(stderr, "Erro ao compilar o código. Verifique o arquivo '%s' para detalhes.\n", FILENAME);
+                fprintf(stderr, "Error compiling the code. Verify the file '%s' for more details.\n", FILENAME);
             }
 
             free(final);
@@ -97,6 +102,12 @@ type: TYPE_INT {$$ = createRecord("int","type int");}
     | TYPE_CHAR {$$ = createRecord("char","type char");}
     | TYPE_BOOL {$$ = createRecord("short int","type bool");}
     | TYPE_STRING {$$ = createRecord("char","type string");}
+    | TYPE_VOID {$$ = createRecord("void","type void");}
+    | TYPE_SHORT {$$ = createRecord("short","type short");}
+    | TYPE_INT BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("int[]","type int[]");}
+    | TYPE_FLOAT BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("float[]","type float[]");}
+    | TYPE_BOOL BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("short int[]","type bool[]");}
+    | TYPE_STRING BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("string[]","type string[]");}
     ;
 
 boolean_operator: OR {
@@ -185,11 +196,13 @@ statement: declaration {
             }
             | while_statement {
                 printf("while_statement\n");
-                $$ = createRecord("TODO","while_statement");
+                $$ = createRecord($1->code,"while_statement");
+                freeRecord($1);
             }
             | for_statement {
                 printf("for_statement\n");
-                $$ = createRecord("TODO","for_statement");
+                $$ = createRecord($1->code,"for_statement");
+                freeRecord($1);
             }
             | return_statement {
                 $$ = createRecord($1->code,"");
@@ -251,6 +264,8 @@ term: STRING_LITERAL {
 declaration: type ID {
                 printf("VAR Declaration\n");
 
+                //TODO: lidar com a declaração de arrays
+
                 if (strcmp($1->opt1, "type string") == 0) { 
 
                     char * code = concat($1->code, " * ", $2,"", "");
@@ -260,7 +275,7 @@ declaration: type ID {
                     $$ = createRecord(code,"");
                     free(code);
                 } else {
-                    char * code = concat($1->code, $2, "", "", "");
+                    char * code = concat($1->code, " ", $2, "", "");
                     $$ = createRecord(code,"");
                     free(code);
                 }
@@ -271,6 +286,8 @@ declaration: type ID {
 
 initialization: type ID ASSIGN expression {
                 printf("VAR Initialization \n");
+
+                //TODO: lidar com declaração de arrays
 
                 char * code;
                 char * code2;
@@ -288,7 +305,13 @@ initialization: type ID ASSIGN expression {
                     code2 = concat(code, $4->code, "", "","");
 
                 } else {
-                    code = concat($1->code," ",$2, ";\n ", $4->code);
+
+                    if(strcmp($4->opt1, "input") == 0){ 
+                        code = concat($1->code," ",$2, ";\n ", $4->code);
+                    } else {
+                       code = concat($1->code," ",$2, " = ", $4->code);
+                    }
+
                     code2 = concat(code, "", "", "", "");
                     $$ = createRecord(code2,"");
                 }
@@ -524,16 +547,66 @@ if_statement: IF PAREN_OPEN expression PAREN_CLOSE block_statement {
         }
         ;
 
-// Utilizar goto para implementar o while
 while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement {
-                    printf("while_statement\n");
+    printf("while_statement\n");
 
-                }
-                ;
+    char *label_start = generateLabel("while_start_");
+    char *label_end = generateLabel("while_end_");
+
+    char *code = concat(label_start, ":\nif (!(", $3->code, ")) goto ", "");
+    char *code2 = concat(code, label_end, ";\n", "", "");
+    char *code3 = concat(code2, $5->code, "\ngoto ", label_start, ";\n");
+    char *code4 = concat(code3, label_end, ":\n", "", "");
+
+    printf("while_statement: %s\n", code4);
+
+    $$ = createRecord(code4, "while_statement");
+
+    free(label_start);
+    free(label_end);
+    freeRecord($3);
+    freeRecord($5);
+    free(code);
+    free(code2);
+    free(code3);
+    free(code4);
+}
+;
 
 
-for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for_increment PAREN_CLOSE block_statement {printf("for_statement\n");}
-        ;
+for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for_increment PAREN_CLOSE block_statement {
+    printf("for_statement\n");
+
+    char *label_start = generateLabel("for_start");
+    char *label_body = generateLabel("for_body");
+    char *label_end = generateLabel("for_end");
+
+    char *code_init = concat($3->code, ";", "\n", "", "");
+    char *code_condition = concat("if (!(", $5->code, ")) goto ", label_end, ";\n");
+    char *code_increment = concat($7->code, ";\n", "goto ", label_start, ";\n");
+    char *code_body = concat(label_body, ":\n", $9->code, "\n", "");
+
+    char *code = concat(code_init, label_start, ":\n", code_condition, "");
+    char *code2 = concat(code, code_body, code_increment, label_end, ":\n");
+
+    $$ = createRecord(code2, "for_statement");
+
+    free(label_start);
+    free(label_body);
+    free(label_end);
+    freeRecord($3);
+    freeRecord($5);
+    freeRecord($7);
+    freeRecord($9);
+    free(code);
+    free(code2);
+    free(code_init);
+    free(code_condition);
+    free(code_increment);
+    free(code_body);
+}
+;
+
 
 for_initializer: /* epsilon */  {
                     printf("for_initializer\n");

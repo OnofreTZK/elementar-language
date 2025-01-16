@@ -1,3 +1,11 @@
-while (x < 10) {
-    x++;
+int main(){
+    int x = 0;
+
+    while (x < 10) {
+        x++;
+    };
+
+    if(x =? 10){
+        print("O X é 10\n");
+    };
 };
