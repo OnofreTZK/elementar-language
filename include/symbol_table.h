@@ -9,7 +9,7 @@ SymbolTable * createSymbolTable();
 
 void setKeyValue(SymbolTable**, char*, char*, char*);
 
-void* getValue(SymbolTable**, char*, char*);
+void* getValue(SymbolTable*, char*, char*);
 
 unsigned int length(SymbolTable*);
 

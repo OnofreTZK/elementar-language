@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include "types.h"
 #include "util.h"
 
@@ -96,19 +97,19 @@ void setKeyValue(SymbolTable** table, char* scope, char* id, char* type) {
     setEntry(&(*table)->symbols, (*table)->capacity, prehash, type, &(*table)->length);
 }
 
-void* getValue(SymbolTable** table, char* scope, char* id) {
+void* getValue(SymbolTable* table, char* scope, char* id) {
     char* prehash = concat(scope, id, "", "", "");
     uint64_t keyhash = hash(prehash);
-    unsigned int index = (unsigned int)(keyhash & (uint64_t)((*table)->capacity - 1));
+    unsigned int index = (unsigned int)(keyhash & (uint64_t)(table->capacity - 1));
 
 
-    while ((*table)->symbols[index].key != NULL) {
-        if (strcmp(prehash, (*table)->symbols[index].key) == 0) {
-            return (*table)->symbols[index].value;
+    while (table->symbols[index].key != NULL) {
+        if (strcmp(prehash, table->symbols[index].key) == 0) {
+            return table->symbols[index].value;
         }
 
         index++;
-        if (index >= (*table)->capacity) {
+        if (index >= table->capacity) {
             index = 0;
         }
     }

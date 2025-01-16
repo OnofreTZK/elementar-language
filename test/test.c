@@ -153,7 +153,7 @@ void getASingleKeyValueShouldWork(){
 
     assert(length(table) == 1);
 
-    char* value = getValue(&table, scope, id);
+    char* value = getValue(table, scope, id);
 
     assert(strcmp(value, type) == 0);
 
