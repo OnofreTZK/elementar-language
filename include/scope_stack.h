@@ -13,6 +13,8 @@ char* pop(Scope**);
 
 char* top(Scope*);
 
-char* peek(Scope*, int pos);
+char* peek(Scope*, int);
+
+void destroyStack(Scope**);
 
 #endif

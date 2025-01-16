@@ -3,6 +3,7 @@
 #include <string.h>
 #include "types.h"
 #include "scope_stack.h"
+#include "symbol_table.h"
 
 // Scope Stack tests
 // ************************************************************************************************
@@ -11,7 +12,7 @@ void newScopeStackCreateAnEmptyStack(){
 
     assert(!scope);
 
-    free(scope);
+    destroyStack(&scope);
 }
 
 void pushInAnEmptyStackShouldWork(){
@@ -99,8 +100,77 @@ void scopeStackSuite(){
 }
 // ************************************************************************************************
 
+// Symbol Table tests
+// ************************************************************************************************
+void createSymbolTableHasNullTable(){
+    SymbolTable* table = createSymbolTable();
+    
+    for(int i = 0; i < 5; i++){
+        assert(table->symbols[i].value == NULL);
+    }
+    
+    assert(length(table) == 0);
+
+    destroyTable(&table);
+}
+
+void setASingleKeyValueShouldWork(){
+    SymbolTable* table = createSymbolTable();
+    char* scope = "global";
+    char* id = "id";
+    char* type = "int";
+
+    setKeyValue(&table, scope, id, type);
+
+    assert(length(table) == 1);
+
+    destroyTable(&table);
+}
+
+void setAfterMaxCapacityShouldWork(){
+    SymbolTable* table = createSymbolTable();
+    char* scope = "global";
+    char* type = "int";
+
+    for(unsigned int i = 0; i < 20; i++){
+        char input[10];
+        sprintf(input, "id%d", i);
+        setKeyValue(&table, scope, input, type);
+    }
+
+    assert(length(table) == 20);
+
+    destroyTable(&table);
+}
+
+void getASingleKeyValueShouldWork(){
+    SymbolTable* table = createSymbolTable();
+    char* scope = "global";
+    char* id = "id";
+    char* type = "int";
+
+    setKeyValue(&table, scope, id, type);
+
+    assert(length(table) == 1);
+
+    char* value = getValue(&table, scope, id);
+
+    assert(strcmp(value, type) == 0);
+
+    destroyTable(&table);
+}
+
+void symbolTableSuite(){
+    createSymbolTableHasNullTable();
+    setASingleKeyValueShouldWork();
+    setAfterMaxCapacityShouldWork();
+    getASingleKeyValueShouldWork();
+}
+// ************************************************************************************************
+
 int main() {
     scopeStackSuite();
+    symbolTableSuite();
     
     return 0;
 }
