@@ -35,13 +35,13 @@ static uint64_t hash(const char* key) {
 }
 
 static const char* setEntry(Symbol** entries, unsigned int capacity,
-        const char* key, void* value, unsigned int* plength) {
+        const char* key, const char* value, unsigned int* plength) {
     uint64_t keyhash = hash(key);
     unsigned int index = (unsigned int)(keyhash & (uint64_t)(capacity - 1));
 
     while ((*entries)[index].key != NULL) {
         if (strcmp(key, (*entries)[index].key) == 0) {
-            (*entries)[index].value = value;
+            (*entries)[index].value = strdup(value);
             return (*entries)[index].key;
         }
 
@@ -58,8 +58,8 @@ static const char* setEntry(Symbol** entries, unsigned int capacity,
         }
         (*plength)++;
     }
-    (*entries)[index].key = (char*)key;
-    (*entries)[index].value = value;
+    (*entries)[index].key = key;
+    (*entries)[index].value = strdup(value);
     return key;
 }
 
@@ -87,7 +87,7 @@ static bool doubleCapacity(SymbolTable** table) {
     return true;
 }
 
-void setKeyValue(SymbolTable** table, char* scope, char* id, char* type) {
+void setKeyValue(SymbolTable** table, char* scope, char* id, const char* type) {
     char* prehash = concat(scope, id, "", "", "");
 
     if ((*table)->length >= (*table)->capacity / 2) {
@@ -97,19 +97,19 @@ void setKeyValue(SymbolTable** table, char* scope, char* id, char* type) {
     setEntry(&(*table)->symbols, (*table)->capacity, prehash, type, &(*table)->length);
 }
 
-void* getValue(SymbolTable** table, char* scope, char* id) {
+void* getValue(SymbolTable* table, char* scope, char* id) {
     char* prehash = concat(scope, id, "", "", "");
     uint64_t keyhash = hash(prehash);
-    unsigned int index = (unsigned int)(keyhash & (uint64_t)((*table)->capacity - 1));
+    unsigned int index = (unsigned int)(keyhash & (uint64_t)(table->capacity - 1));
 
 
-    while ((*table)->symbols[index].key != NULL) {
-        if (strcmp(prehash, (*table)->symbols[index].key) == 0) {
-            return (*table)->symbols[index].value;
+    while (table->symbols[index].key != NULL) {
+        if (strcmp(prehash, table->symbols[index].key) == 0) {
+            return table->symbols[index].value;
         }
 
         index++;
-        if (index >= (*table)->capacity) {
+        if (index >= table->capacity) {
             index = 0;
         }
     }
@@ -119,6 +119,17 @@ void* getValue(SymbolTable** table, char* scope, char* id) {
 
 unsigned int length(SymbolTable* table) {
     return table->length;
+}
+
+void printTable(SymbolTable* table){
+   Symbol* ptr = table->symbols;;
+
+   unsigned int size = table->capacity;
+
+   for(unsigned int i = 0; i < size; i++){
+       Symbol s = ptr[i];
+       printf("KEY: %s | VALUE %s\n",s.key, s.value);
+    }
 }
 
 void destroyTable(SymbolTable** table){

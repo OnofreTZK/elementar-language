@@ -9,7 +9,7 @@ typedef struct _Scope {
 
 typedef struct _Symbol {
   const char* key;
-  void* value;
+  char* value;
 } Symbol ;
 
 typedef struct _SymbolTable {

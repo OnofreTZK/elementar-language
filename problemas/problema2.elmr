@@ -6,7 +6,7 @@ int main(){
     int interval4 = 0;
 
     while (true){
-        print("Digite um número (ou -1 para parar): \n);
+        print("Digite um número (ou -1 para parar): \n");
         int numero = readInt();
 
         if(numero =? -1){

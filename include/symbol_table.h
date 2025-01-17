@@ -7,11 +7,13 @@
 
 SymbolTable * createSymbolTable();
 
-void setKeyValue(SymbolTable**, char*, char*, char*);
+void setKeyValue(SymbolTable**, char*, char*, const char*);
 
-void* getValue(SymbolTable**, char*, char*);
+void* getValue(SymbolTable*, char*, char*);
 
 unsigned int length(SymbolTable*);
+
+void printTable(SymbolTable*);
 
 void destroyTable(SymbolTable**);
 

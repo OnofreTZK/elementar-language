@@ -16,7 +16,7 @@ Scope* createNode(char* label, unsigned int pos){
 	return scope;
 }
 
-Scope* newScopeStack() {
+Scope* createScopeStack() {
 	Scope* scope = NULL;
 
 	return scope;
