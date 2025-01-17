@@ -13,6 +13,8 @@ void* getValue(SymbolTable*, char*, char*);
 
 unsigned int length(SymbolTable*);
 
+void printTable(SymbolTable*);
+
 void destroyTable(SymbolTable**);
 
 #endif

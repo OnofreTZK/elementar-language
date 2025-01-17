@@ -121,6 +121,17 @@ unsigned int length(SymbolTable* table) {
     return table->length;
 }
 
+void printTable(SymbolTable* table){
+   Symbol* ptr = table->symbols;;
+
+   unsigned int size = length(table);
+
+   for(unsigned int i = 0; i < size; i++){
+       Symbol s = ptr[i];
+       printf("KEY: %s | VALUE %s\n",s.key, s.value);
+    }
+}
+
 void destroyTable(SymbolTable** table){
     for(unsigned int i = 0; i < (*table)->capacity; i++){
         free((void*)(*table)->symbols[i].key);

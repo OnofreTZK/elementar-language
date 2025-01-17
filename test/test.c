@@ -138,6 +138,8 @@ void setAfterMaxCapacityShouldWork(){
         setKeyValue(&table, scope, input, type);
     }
 
+    printTable(table);
+
     assert(length(table) == 20);
 
     destroyTable(&table);
