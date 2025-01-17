@@ -48,21 +48,35 @@ void check_return_type(const char *expected, const char *actual, int line, int c
     }
 }
 
-// Verifica erros de atribuição
 void check_assignment(const char *lhs, const char *rhs_type, int line, int column) {
     const char *lhs_type = get_symbol_type_in_scope(lhs);
+
+    // Verifica se a variável foi declarada
     if (!lhs_type) {
         char msg[256];
         snprintf(msg, sizeof(msg), "Variável '%s' não declarada.", lhs);
         report_error(msg, line, column);
         return;
     }
-    if (!is_compatible(lhs_type, rhs_type)) {
-        char msg[256];
-        snprintf(msg, sizeof(msg), "Tipos incompatíveis na atribuição: '%s' e '%s'.", lhs_type, rhs_type);
-        report_error(msg, line, column);
+
+    // Compatibilidade de tipos, incluindo literais
+    if ((strcmp(lhs_type, "int") == 0 && (strcmp(rhs_type, "int") == 0 || strcmp(rhs_type, "literal_int") == 0)) ||
+        (strcmp(lhs_type, "float") == 0 && 
+         (strcmp(rhs_type, "float") == 0 || strcmp(rhs_type, "double") == 0 || strcmp(rhs_type, "literal_float") == 0)) ||
+        (strcmp(lhs_type, "double") == 0 && 
+         (strcmp(rhs_type, "float") == 0 || strcmp(rhs_type, "double") == 0 || strcmp(rhs_type, "literal_float") == 0)) ||
+        (strcmp(lhs_type, "char") == 0 && (strcmp(rhs_type, "char") == 0 || strcmp(rhs_type, "literal_char") == 0)) ||
+        (strcmp(lhs_type, "string") == 0 && strcmp(rhs_type, "literal_string") == 0)) {
+        return; // Compatível
     }
+
+    // Reporta incompatibilidade de tipos
+    char msg[256];
+    snprintf(msg, sizeof(msg), "Tipos incompatíveis na atribuição: '%s' e '%s'.", lhs_type, rhs_type);
+    report_error(msg, line, column);
 }
+
+
 
 // Verifica se uma variável está sendo redeclarada
 void check_variable_redeclaration(const char *name, int line, int column) {

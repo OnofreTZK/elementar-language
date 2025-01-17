@@ -312,79 +312,41 @@ declaration: type ID {
             ;
 
 
-initialization: type ID ASSIGN expression {
-                printf("VAR Initialization \n");
+initialization: type ID ASSIGN term {
+                printf("VAR Initialization\n");
 
-                //char* currentScope = top(scopeStack);
+                char *currentScope = top(scope_stack);
 
-                //TODO: checar aqui se a variável já foi declarada
+                // Verifica se a variável já foi declarada no escopo atual
+                add_symbol_to_scope($2, $1->code, yylineno, get_column());
 
-                //printf("currentScope: %s\n", currentScope);
-                //printf("nome da variável: %s\n", $2);
-                //printf("tipo da variável: %s\n", $1->code);
+                // Verifica compatibilidade de tipos entre o tipo da variável e o literal
+                check_assignment($2, $4->opt1, yylineno, get_column());
 
-               // setKeyValue(&symbolTable, currentScope, $2, $1->code);
-
-
-                //TODO: lidar com declaração de arrays
-
-                char * code;
-                char * code2;
-                
-                // A informação aqui tem que vir de cima (definição da função)
-                // Por que a parte semântica da função so é evaluada depois que os stmts
-                // São evaluados. Então aqui o escopo atual não serve como 
-                //referencia verdadeira
-                char* currentScope = top(scope_stack);
-
+                // Insere a variável na tabela de símbolos
                 setKeyValue(&symbol_table, currentScope, $2, $1->code);
 
+                char *code;
+
                 if (strcmp($1->code, "string") == 0) { 
-                    //TODO: passar da expressão o tamanho da string
-                    //TODO: definir o tamanho da string pela expressão
-                    //TODO: é para gerar um erro aqui caso a expressão não seja uma string
-
-                    if(strcmp($4->opt1, "input") == 0){ //Faz a alocação para a string
-                        code = concat($1->code, " * ", $2, " = (char *)malloc(100 * sizeof(char));\n", "");
-                    } else {
-                        code = concat($1->code, " * ", $2, " = ", "");
-                    }
-                    code2 = concat(code, $4->code, "", "", "");
-
+                    code = concat($1->code, " * ", $2, " = ", $4->code); // Strings precisam de alocação especial
                 } else {
-
-                    if(strcmp($4->opt1, "input") == 0){ 
-                        code = concat($1->code," ",$2, ";\n ", $4->code);
-                    } else {
-                       code = concat($1->code," ",$2, " = ", $4->code);
-                    }
-                    code2 = concat(code, "", "", "", "");
-                    $$ = createRecord(code2,"");
+                    code = concat($1->code, " ", $2, " = ", $4->code); // Demais tipos
                 }
 
-                if(strcmp($4->opt1, "input") == 0) {
+                char *final_code = concat(code, ";\n", "", "", "");
+                $$ = createRecord(final_code, "");
 
-                    char * code3;
-                    if (strcmp($1->opt1, "type string") == 0){
-                        code3 = concat(code2, $2, ")", "", "");
-                    } else {
-                        code3 = concat(code2, "&",$2, ")", "");
-                    }
-                    $$ = createRecord(code3,"");
-                    free(code3);
+                printf("initialization: %s\n", final_code);
 
-                } else {
-                    $$ = createRecord(code2,"");
-                }
-
-                printf("initialization: %s\n", code2);
-                
                 free(code);
-                free(code2);
+                free(final_code);
                 freeRecord($1);
                 freeRecord($4);
             }
-            ;  
+            ;
+
+
 
 assignment: ID ASSIGN expression {
                 printf("Assignment\n");
