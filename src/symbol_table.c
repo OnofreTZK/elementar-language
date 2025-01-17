@@ -58,7 +58,7 @@ static const char* setEntry(Symbol** entries, unsigned int capacity,
         }
         (*plength)++;
     }
-    (*entries)[index].key = (char*)key;
+    (*entries)[index].key = strdup(key);
     (*entries)[index].value = value;
     return key;
 }
