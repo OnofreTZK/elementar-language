@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "types.h"
 
-Scope* newScopeStack();
+Scope* createScopeStack();
 
 void push(char*, Scope**);
 
@@ -13,6 +13,8 @@ char* pop(Scope**);
 
 char* top(Scope*);
 
-char* peek(Scope*, int pos);
+char* peek(Scope*, int);
+
+void destroyStack(Scope**);
 
 #endif
