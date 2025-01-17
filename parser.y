@@ -346,30 +346,58 @@ initialization: type ID ASSIGN term {
             }
             ;
 
-
-
 assignment: ID ASSIGN expression {
-                printf("Assignment\n");
-                
-                char* currentScope = top(scope_stack);
+                printf("DEBUG: Iniciando assignment para '%s'.\n", $1);
 
-                char* type = getValue(symbol_table, currentScope, $1);
-
-                printf("THE TYPE IS: %s\n", type);
-
-                //Coloca a variável que vai receber o valor do input
-                if(strcmp($3->opt1, "input") == 0) {
-                    char * code = concat($1, "=", $3->code,$1, ")");
-                    free(code);
-
+                if (!scope_stack) {
+                    report_error("Pilha de escopos não inicializada.", yylineno, get_column());
+                    $$ = createRecord("", ""); // Retorna um registro vazio
+                } else if (!symbol_table) {
+                    report_error("Tabela de símbolos não inicializada.", yylineno, get_column());
+                    $$ = createRecord("", ""); // Retorna um registro vazio
                 } else {
-                    char * code = concat($1, "=", $3->code, "", "");
-                    $$ = createRecord(code,"");
-                    free(code);
+                    char *currentScope = top(scope_stack);
+
+                    if (!currentScope) {
+                        report_error("Escopo atual não encontrado.", yylineno, get_column());
+                        $$ = createRecord("", ""); // Retorna um registro vazio
+                    } else {
+                        printf("DEBUG: Escopo atual: '%s'. Verificando variável '%s'.\n", currentScope, $1);
+
+                        // Verifica se a variável foi declarada antes de ser usada
+                        check_undefined_variable($1, yylineno, get_column());
+
+                        if (!getValue(symbol_table, currentScope, $1)) {
+                            // Caso a variável não seja encontrada, retorna um registro vazio
+                            $$ = createRecord("", "");
+                        } else {
+                            // Obtém o tipo da variável no escopo atual
+                            char *type = getValue(symbol_table, currentScope, $1);
+
+                            printf("DEBUG: Variável '%s' encontrada com tipo '%s'.\n", $1, type);
+
+                            // Verifica compatibilidade de tipos
+                            check_assignment($1, $3->opt1, yylineno, get_column());
+
+                            // Gera código de atribuição
+                            char *code;
+                            if (strcmp($3->opt1, "input") == 0) {
+                                code = concat($1, "=", $3->code, $1, ")");
+                            } else {
+                                code = concat($1, "=", $3->code, "", "");
+                            }
+
+                            $$ = createRecord(code, "");
+                            free(code);
+                        }
+                    }
                 }
-                freeRecord($3);               
+
+                freeRecord($3);
             }
-            ;  
+            ;
+
+
 
 /* 
 - Checar tipos para não permitir coisas como ++<string>

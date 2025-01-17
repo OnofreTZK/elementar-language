@@ -10,10 +10,19 @@ extern char *filename; // Nome do arquivo sendo analisado
 
 // Função auxiliar para relatar erros usando yyerror
 void report_error(const char *msg, int line, int column) {
-    char error_message[512];
-    snprintf(error_message, sizeof(error_message), "%s-%d:%d: %s", filename, line, column, msg);
-    yyerror(error_message); // Delega a exibição para o yyerror
+    if (!msg || !filename) {
+        fprintf(stderr, "Erro interno: Mensagem ou nome do arquivo é nulo.\n");
+        exit(1);
+    }
+
+    // Formata a mensagem completa para ser passada ao yyerror
+    char full_msg[512];
+    snprintf(full_msg, sizeof(full_msg), "%s-%d:%d: %s", filename, line, column, msg);
+
+    // Chama yyerror para imprimir o erro
+    yyerror(full_msg);
 }
+
 
 // Adiciona um símbolo ao escopo atual
 void add_symbol_to_scope(const char *name, const char *type, int line, int column) {
@@ -87,9 +96,26 @@ void check_variable_redeclaration(const char *name, int line, int column) {
     }
 }
 
-// Verifica se uma variável usada está definida
 void check_undefined_variable(const char *name, int line, int column) {
-    if (!is_symbol_in_scope(name)) {
+    if (!scope_stack) {
+        report_error("Pilha de escopos não inicializada.", line, column);
+        exit(1);
+    }
+
+    if (!symbol_table) {
+        report_error("Tabela de símbolos não inicializada.", line, column);
+        exit(1);
+    }
+
+    const char *current_scope = top(scope_stack);
+
+    if (!current_scope) {
+        report_error("Escopo atual não encontrado.", line, column);
+        exit(1);
+    }
+
+    // Verifica se a variável existe na tabela de símbolos
+    if (!getValue(symbol_table, (char *)current_scope, (char *)name)) {
         char msg[256];
         snprintf(msg, sizeof(msg), "Variável '%s' não declarada.", name);
         report_error(msg, line, column);

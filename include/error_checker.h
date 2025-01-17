@@ -13,6 +13,7 @@ extern SymbolTable *symbol_table;               // Tabela de símbolos
 extern Scope *scope_stack;                      // Pilha de escopos
 
 int yyerror(char *msg); // Declarar a função do parser
+void report_error(const char *msg, int line, int column);
 int is_compatible(const char *type1, const char *type2); // Declarar função para verificar tipos
 
 // Funções auxiliares para a tabela de símbolos e escopos
