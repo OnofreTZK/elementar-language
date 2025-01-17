@@ -26,15 +26,27 @@ void report_error(const char *msg, int line, int column) {
 
 // Adiciona um símbolo ao escopo atual
 void add_symbol_to_scope(const char *name, const char *type, int line, int column) {
+    // Verifica se 'name' é uma palavra-chave reservada (como 'int' ou 'float')
+    const char *reserved_keywords[] = {"int", "float", "char", "string", "bool", "double", "void", NULL};
+    for (int i = 0; reserved_keywords[i] != NULL; i++) {
+        if (strcmp(name, reserved_keywords[i]) == 0) {
+            // Não adiciona palavras-chave à tabela de símbolos
+            return;
+        }
+    }
+
     const char *current_scope = top(scope_stack);
+
     if (is_symbol_in_scope(name)) {
         char msg[256];
         snprintf(msg, sizeof(msg), "Variável '%s' redeclarada no escopo '%s'.", name, current_scope);
         report_error(msg, line, column);
         return;
     }
+
     setKeyValue(&symbol_table, (char *)current_scope, (char *)name, type);
 }
+
 
 // Verifica se um símbolo está no escopo atual
 int is_symbol_in_scope(const char *name) {
@@ -63,28 +75,30 @@ void check_assignment(const char *lhs, const char *rhs_type, int line, int colum
     // Verifica se a variável foi declarada
     if (!lhs_type) {
         char msg[256];
-        snprintf(msg, sizeof(msg), "Variável '%s' não declarada.", lhs);
+        snprintf(msg, sizeof(msg), "Erro: Variável '%s' não declarada.", lhs);
         report_error(msg, line, column);
         return;
     }
 
-    // Compatibilidade de tipos, incluindo literais
-    if ((strcmp(lhs_type, "int") == 0 && (strcmp(rhs_type, "int") == 0 || strcmp(rhs_type, "literal_int") == 0)) ||
+    // Compatibilidade de tipos, incluindo conversões implícitas
+    if ((strcmp(lhs_type, "int") == 0 && 
+         (strcmp(rhs_type, "int") == 0 || strcmp(rhs_type, "literal_int") == 0)) ||
         (strcmp(lhs_type, "float") == 0 && 
-         (strcmp(rhs_type, "float") == 0 || strcmp(rhs_type, "double") == 0 || strcmp(rhs_type, "literal_float") == 0)) ||
+         (strcmp(rhs_type, "float") == 0 || strcmp(rhs_type, "double") == 0 || strcmp(rhs_type, "literal_float") == 0 || strcmp(rhs_type, "int") == 0 || strcmp(rhs_type, "literal_int") == 0)) ||
         (strcmp(lhs_type, "double") == 0 && 
          (strcmp(rhs_type, "float") == 0 || strcmp(rhs_type, "double") == 0 || strcmp(rhs_type, "literal_float") == 0)) ||
-        (strcmp(lhs_type, "char") == 0 && (strcmp(rhs_type, "char") == 0 || strcmp(rhs_type, "literal_char") == 0)) ||
-        (strcmp(lhs_type, "string") == 0 && strcmp(rhs_type, "literal_string") == 0)) {
+        (strcmp(lhs_type, "char") == 0 && 
+         (strcmp(rhs_type, "char") == 0 || strcmp(rhs_type, "literal_char") == 0)) ||
+        (strcmp(lhs_type, "string") == 0 && 
+         (strcmp(rhs_type, "string") == 0 || strcmp(rhs_type, "literal_string") == 0))) {
         return; // Compatível
     }
 
     // Reporta incompatibilidade de tipos
     char msg[256];
-    snprintf(msg, sizeof(msg), "Tipos incompatíveis na atribuição: '%s' e '%s'.", lhs_type, rhs_type);
+    snprintf(msg, sizeof(msg), "Erro: Tipos incompatíveis na atribuição para '%s': esperado '%s', mas encontrado '%s'.", lhs, lhs_type, rhs_type);
     report_error(msg, line, column);
 }
-
 
 
 // Verifica se uma variável está sendo redeclarada
@@ -124,12 +138,13 @@ void check_undefined_variable(const char *name, int line, int column) {
 
 // Verifica incrementos e decrementos
 void check_increment(const char *type, int line, int column) {
-    if (strcmp(type, "int") != 0) {
+    if (strcmp(type, "int") != 0 && strcmp(type, "float") != 0 && strcmp(type, "double") != 0) {
         char msg[256];
-        snprintf(msg, sizeof(msg), "Incremento só é permitido para variáveis do tipo 'int'.");
+        snprintf(msg, sizeof(msg), "Operadores '++' e '--' só são permitidos para tipos numéricos (encontrado '%s').", type);
         report_error(msg, line, column);
     }
 }
+
 
 // Verifica operações aritméticas
 void check_arithmetic_operation(const char *op, const char *type1, const char *type2, int line, int column) {

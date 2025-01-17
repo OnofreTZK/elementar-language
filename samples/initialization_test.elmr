@@ -1,8 +1,11 @@
-int main(){
-
-int x = 10;        // Inicialização válida
-float y = 3.14;    // Inicialização válida
-z = 5;             // Erro: variável 'z' não declarada
-char x = 'a';      // Erro: variável 'x' redeclarada no escopo global
-float y = "test";  // Erro: tipos incompatíveis na inicialização
+int main() {
+    int x = 10;        // Inicialização válida
+    float y = 3.14;    // Inicialização válida
+    char c = 'A';      // Inicialização válida
+    string name = "Daniel"; // Inicialização válida
+    char name = "Daniel";   // Erro: tipos incompatíveis
+    x = "test";             // Erro: tipos incompatíveis
+    y = 123;                // Válido: conversão implícita
+    name = 123;             // Erro: tipos incompatíveis
 };
+
