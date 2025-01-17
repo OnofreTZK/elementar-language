@@ -1,0 +1,5 @@
+int x;      // Declaração válida
+float y;    // Declaração válida
+int x;      // Erro: variável 'x' redeclarada no escopo global
+char z;     // Declaração válida
+float y;    // Erro: variável 'y' redeclarada no escopo global

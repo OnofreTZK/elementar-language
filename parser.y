@@ -7,15 +7,20 @@
 #include "file_save.h"
 #include "scope_stack.h"
 #include "symbol_table.h"
+#include "error_checker.h"
 
 int yylex(void);
 int yyerror(char *s);
+char *filename = NULL;
 extern int yylineno;
+extern int yycolumn;
+extern int get_column();
 extern char *yytext;
 extern FILE *yyin;
 
-Scope* stack;
-SymbolTable* table;
+Scope* scope_stack;
+SymbolTable* symbol_table;
+const char *current_function_return_type;
 
 #define FILENAME "./outputs/output.c"
 #define PROGRAM_NAME "./outputs/program"
@@ -280,34 +285,32 @@ term: STRING_LITERAL {
 declaration: type ID {
                 printf("VAR Declaration\n");
 
-                //char* currentScope = top(scopeStack);
+                // Obtém o escopo atual
+                char* currentScope = top(scope_stack);
 
-                //TODO: checar aqui se a variável já foi declarada
+                // Verifica se a variável já foi declarada no escopo atual
+                add_symbol_to_scope($2, $1->code, yylineno, get_column());
 
-                //setKeyValue(&symbolTable, currentScope, $2, $1->code);
+                // Insere a variável na tabela de símbolos
+                setKeyValue(&symbol_table, currentScope, $2, $1->code);
 
-                //TODO: lidar com a declaração de arrays
-                char* currentScope = top(stack);
-
-                setKeyValue(&table, currentScope, $2, $1->code);
-
+                // Lida com a declaração de strings e outros tipos
                 if (strcmp($1->opt1, "type string") == 0) { 
-
-                    char * code = concat($1->code, " * ", $2,"", "");
-
+                    char *code = concat($1->code, " * ", $2, "", "");
                     printf("declaration: %s\n", code);
-
-                    $$ = createRecord(code,"");
+                    $$ = createRecord(code, "");
                     free(code);
                 } else {
-                    char * code = concat($1->code, " ", $2, "", "");
-                    $$ = createRecord(code,"");
+                    char *code = concat($1->code, " ", $2, "", "");
+                    $$ = createRecord(code, "");
                     free(code);
                 }
 
+                // Libera memória do record atual
                 freeRecord($1);
             }
-            ;  
+            ;
+
 
 initialization: type ID ASSIGN expression {
                 printf("VAR Initialization \n");
@@ -332,9 +335,9 @@ initialization: type ID ASSIGN expression {
                 // Por que a parte semântica da função so é evaluada depois que os stmts
                 // São evaluados. Então aqui o escopo atual não serve como 
                 //referencia verdadeira
-                char* currentScope = top(stack);
+                char* currentScope = top(scope_stack);
 
-                setKeyValue(&table, currentScope, $2, $1->code);
+                setKeyValue(&symbol_table, currentScope, $2, $1->code);
 
                 if (strcmp($1->code, "string") == 0) { 
                     //TODO: passar da expressão o tamanho da string
@@ -386,9 +389,9 @@ initialization: type ID ASSIGN expression {
 assignment: ID ASSIGN expression {
                 printf("Assignment\n");
                 
-                char* currentScope = top(stack);
+                char* currentScope = top(scope_stack);
 
-                char* type = getValue(table, currentScope, $1);
+                char* type = getValue(symbol_table, currentScope, $1);
 
                 printf("THE TYPE IS: %s\n", type);
 
@@ -456,8 +459,8 @@ arithmetic_expression: unary_expression {
 
                         if(strcmp($1->opt1, "id") == 0){
                             printf("Era um id\n");
-                            char* currentScope = top(stack);
-                            type = getValue(table, currentScope, $3->code);
+                            char* currentScope = top(scope_stack);
+                            type = getValue(symbol_table, currentScope, $3->code);
                             
                             printf("type recebido: %s\n", type);
                         } else {
@@ -583,7 +586,7 @@ expression: PAREN_OPEN expression PAREN_CLOSE {
 
 main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement {
             printf("main\n");
-            push("main", &stack);
+            push("main", &scope_stack);
 
             char * code = concat($1->code, " main", "(int argc, char *argv[])\n", $5->code, "");
             $$ = createRecord(code,"");
@@ -816,9 +819,9 @@ function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
         
         if(strcmp($1, "print") == 0) { 
 
-            char* currentScope = top(stack);
+            char* currentScope = top(scope_stack);
             
-            char* type = getValue(table, currentScope, $3->code);
+            char* type = getValue(symbol_table, currentScope, $3->code);
 
             //TODO: se variável não existir, retornar um erro!
 
@@ -918,14 +921,20 @@ char* get_extension(char* pointer, int len) {
 
 int main(int argc, char *argv[]) { 
 
+    scope_stack = createScopeStack();
+    symbol_table = createSymbolTable();
+
+    // Verifica se o número de argumentos está correto
     if (argc != 2) {
         printf("Usage: %s <source file>\n", argv[0]);
         return 1;
     }
 
+    // Nome do arquivo de entrada
     char* input_file = argv[1]; 
     char* ext_pointer = strrchr(input_file, '.');
 
+    // Verifica se o arquivo possui extensão válida
     if (!ext_pointer) {
         printf("Invalid source file!\n");
         return 1;
@@ -942,20 +951,28 @@ int main(int argc, char *argv[]) {
 
     free(ext);
 
+    // Abre o arquivo de entrada
     yyin = fopen(input_file, "r");
     if (!yyin) {
         printf("Error: Cannot open file %s\n", input_file);
         return 1;
     }
 
-    stack = createScopeStack();
-    table = createSymbolTable();
+    // Declara e inicializa a variável global filename
+    extern char *filename;
+    filename = input_file; // Usa o nome do arquivo fornecido como argumento
 
-    // Global scope
-    push("global", &stack);
+    // Inicia o escopo global
+    push("global", &scope_stack);
 
+    // Inicia o parsing
     yyparse();  
+
+    // Libera recursos
+    destroyStack(&scope_stack);
+    destroyTable(&symbol_table);
 
     fclose(yyin);
     return 0;
 }
+

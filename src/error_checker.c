@@ -1,0 +1,110 @@
+#include "../include/error_checker.h"
+#include <stdio.h>
+#include "../y.tab.h"
+#include "../include/util.h"
+#include <string.h>
+
+extern SymbolTable *symbol_table;
+extern Scope *scope_stack;
+extern char *filename; // Nome do arquivo sendo analisado
+
+// Função auxiliar para relatar erros usando yyerror
+void report_error(const char *msg, int line, int column) {
+    char error_message[512];
+    snprintf(error_message, sizeof(error_message), "%s-%d:%d: %s", filename, line, column, msg);
+    yyerror(error_message); // Delega a exibição para o yyerror
+}
+
+// Adiciona um símbolo ao escopo atual
+void add_symbol_to_scope(const char *name, const char *type, int line, int column) {
+    const char *current_scope = top(scope_stack);
+    if (is_symbol_in_scope(name)) {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "Variável '%s' redeclarada no escopo '%s'.", name, current_scope);
+        report_error(msg, line, column);
+        return;
+    }
+    setKeyValue(&symbol_table, (char *)current_scope, (char *)name, type);
+}
+
+// Verifica se um símbolo está no escopo atual
+int is_symbol_in_scope(const char *name) {
+    const char *current_scope = top(scope_stack);
+    return getValue(symbol_table, (char *)current_scope, (char *)name) != NULL;
+}
+
+// Obtém o tipo de um símbolo no escopo atual
+const char *get_symbol_type_in_scope(const char *name) {
+    const char *current_scope = top(scope_stack);
+    return (const char *)getValue(symbol_table, (char *)current_scope, (char *)name);
+}
+
+// Verifica erros de tipo em retorno de função
+void check_return_type(const char *expected, const char *actual, int line, int column) {
+    if (!is_compatible(expected, actual)) {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "Retorno esperado '%s', mas encontrado '%s'.", expected, actual);
+        report_error(msg, line, column);
+    }
+}
+
+// Verifica erros de atribuição
+void check_assignment(const char *lhs, const char *rhs_type, int line, int column) {
+    const char *lhs_type = get_symbol_type_in_scope(lhs);
+    if (!lhs_type) {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "Variável '%s' não declarada.", lhs);
+        report_error(msg, line, column);
+        return;
+    }
+    if (!is_compatible(lhs_type, rhs_type)) {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "Tipos incompatíveis na atribuição: '%s' e '%s'.", lhs_type, rhs_type);
+        report_error(msg, line, column);
+    }
+}
+
+// Verifica se uma variável está sendo redeclarada
+void check_variable_redeclaration(const char *name, int line, int column) {
+    if (is_symbol_in_scope(name)) {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "Variável '%s' já declarada no escopo atual.", name);
+        report_error(msg, line, column);
+    }
+}
+
+// Verifica se uma variável usada está definida
+void check_undefined_variable(const char *name, int line, int column) {
+    if (!is_symbol_in_scope(name)) {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "Variável '%s' não declarada.", name);
+        report_error(msg, line, column);
+    }
+}
+
+// Verifica incrementos e decrementos
+void check_increment(const char *type, int line, int column) {
+    if (strcmp(type, "int") != 0) {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "Incremento só é permitido para variáveis do tipo 'int'.");
+        report_error(msg, line, column);
+    }
+}
+
+// Verifica operações aritméticas
+void check_arithmetic_operation(const char *op, const char *type1, const char *type2, int line, int column) {
+    if (strcmp(type1, "int") != 0 || strcmp(type2, "int") != 0) {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "Operação '%s' só é permitida para variáveis do tipo 'int'.", op);
+        report_error(msg, line, column);
+    }
+}
+
+// Gerenciamento de escopos
+void enter_scope(const char *scope_name) {
+    push((char *)scope_name, &scope_stack);
+}
+
+void exit_scope() {
+    pop(&scope_stack);
+}
