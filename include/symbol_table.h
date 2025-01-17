@@ -7,7 +7,7 @@
 
 SymbolTable * createSymbolTable();
 
-void setKeyValue(SymbolTable**, char*, char*, char*);
+void setKeyValue(SymbolTable**, char*, char*, const char*);
 
 void* getValue(SymbolTable*, char*, char*);
 

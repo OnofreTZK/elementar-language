@@ -5,12 +5,17 @@
 #include "util.h"
 #include "record.h"
 #include "file_save.h"
+#include "scope_stack.h"
+#include "symbol_table.h"
 
 int yylex(void);
 int yyerror(char *s);
 extern int yylineno;
 extern char *yytext;
 extern FILE *yyin;
+
+Scope* stack;
+SymbolTable* table;
 
 #define FILENAME "./outputs/output.c"
 #define PROGRAM_NAME "./outputs/program"
@@ -67,13 +72,14 @@ program: statement_list SEMICOLON {
             const char *executable = PROGRAM_NAME;
             char command[256];
 
+            printTable(table);
             //TODO melhorar isso aqui ao pegar os imports
             snprintf(command, sizeof(command), "gcc %s ./outputs/include/strings.c ./outputs/include/type-conversions.c -o %s", FILENAME, PROGRAM_NAME);
             printf("Compiling the code with the command: %s\n", command);
 
             int result = system(command);
             if (result == 0) {
-                printf("Code compiled succesfully! Executor generated: %s\n", executable);
+                printf("Code compiled succesfully! Executable generated: %s\n", executable);
             } else {
                 fprintf(stderr, "Error compiling the code. Verify the file '%s' for more details.\n", FILENAME);
             }
@@ -265,6 +271,9 @@ declaration: type ID {
                 printf("VAR Declaration\n");
 
                 //TODO: lidar com a declaração de arrays
+                char* currentScope = top(stack);
+
+                setKeyValue(&table, currentScope, $2, $1->code);
 
                 if (strcmp($1->opt1, "type string") == 0) { 
 
@@ -291,6 +300,14 @@ initialization: type ID ASSIGN expression {
 
                 char * code;
                 char * code2;
+                
+                // A informação aqui tem que vir de cima (definição da função)
+                // Por que a parte semântica da função so é evaluada depois que os stmts
+                // São evaluados. Então aqui o escopo atual não serve como 
+                //referencia verdadeira
+                char* currentScope = top(stack);
+
+                setKeyValue(&table, currentScope, $2, $1->code);
 
                 if (strcmp($1->opt1, "type string") == 0) { 
                     //TODO: passar da expressão o tamanho da string
@@ -342,6 +359,12 @@ initialization: type ID ASSIGN expression {
 
 assignment: ID ASSIGN expression {
                 printf("Assignment\n");
+                
+                char* currentScope = top(stack);
+
+                char* type = getValue(table, currentScope, $1);
+
+                printf("THE TYPE IS: %s\n", type);
 
                 //Coloca a variável que vai receber o valor do input
                 if(strcmp($3->opt1, "input") == 0) {
@@ -397,7 +420,7 @@ arithmetic_expression: unary_expression {
                         printf("AQUIIIIIIIIIII\n");
                         printf("%s\n",$1->opt1);
                         printf("%s\n",$3->opt1);
-                        
+                         
                         if(strcmp($1->opt1, "string") == 0 && strcmp($3->opt1, "string") == 0) {
 
                             // TODO: checar se o operador é soma. Do contrário gerar erro
@@ -486,6 +509,8 @@ expression: PAREN_OPEN expression PAREN_CLOSE {
 
 main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement {
             printf("main\n");
+            push("main", &stack);
+
             char * code = concat($1->code, " main", "(int argc, char *argv[])\n", $5->code, "");
             $$ = createRecord(code,"");
             freeRecord($1);
@@ -714,9 +739,17 @@ argument_list_nonempty: term  {
 
 function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
         printf("function_call\n");
-
+        
         if(strcmp($1, "print") == 0) { 
 
+            char* currentScope = top(stack);
+            
+            char* type = getValue(table, currentScope, $3->code);
+
+            printTable(table);
+
+            printf("THE CURRENT SCOPE IS %s\n", currentScope);
+            printf("THE TYPE IS: %s\n", type);
             char * code;
             if(strcmp($3->opt1, "string") == 0){
                 code = concat("printf", "(", $3->code, "", ")");
@@ -836,6 +869,12 @@ int main(int argc, char *argv[]) {
         printf("Error: Cannot open file %s\n", input_file);
         return 1;
     }
+
+    stack = createScopeStack();
+    table = createSymbolTable();
+
+    // Global scope
+    push("global", &stack);
 
     yyparse();  
 

@@ -4,6 +4,7 @@ int main(){
     float y = 13 / 11;
     int c = 8;
 
+    print(c);
     float result = x**2 - y + c;
     print(result);
 

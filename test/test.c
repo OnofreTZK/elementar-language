@@ -7,8 +7,8 @@
 
 // Scope Stack tests
 // ************************************************************************************************
-void newScopeStackCreateAnEmptyStack(){
-    Scope* scope = newScopeStack();
+void createScopeStackCreateAnEmptyStack(){
+    Scope* scope = createScopeStack();
 
     assert(!scope);
 
@@ -16,7 +16,7 @@ void newScopeStackCreateAnEmptyStack(){
 }
 
 void pushInAnEmptyStackShouldWork(){
-    Scope* scope = newScopeStack();
+    Scope* scope = createScopeStack();
 
     push("1", &scope);
     
@@ -26,7 +26,7 @@ void pushInAnEmptyStackShouldWork(){
 }
 
 void pushInANotEmptyStackShouldWork(){
-    Scope* scope = newScopeStack();
+    Scope* scope = createScopeStack();
 
     push("1", &scope);
     push("2", &scope);
@@ -37,7 +37,7 @@ void pushInANotEmptyStackShouldWork(){
 }
 
 void popAnEmptyStackShouldReturnAnEmptyString(){
-    Scope* scope = newScopeStack();
+    Scope* scope = createScopeStack();
 
     assert(strcmp((pop(&scope)), "") == 0);
 
@@ -45,7 +45,7 @@ void popAnEmptyStackShouldReturnAnEmptyString(){
 }
 
 void popAStackShouldReturnTheElementAtTop(){
-    Scope* scope = newScopeStack();
+    Scope* scope = createScopeStack();
 
     push("1", &scope);
     push("2", &scope);
@@ -57,7 +57,7 @@ void popAStackShouldReturnTheElementAtTop(){
 }
 
 void topWhenStackIsEmptyShouldReturnedAnEmptyString(){
-    Scope* scope = newScopeStack();
+    Scope* scope = createScopeStack();
 
     assert(strcmp((top(scope)), "") == 0);
 
@@ -65,7 +65,7 @@ void topWhenStackIsEmptyShouldReturnedAnEmptyString(){
 }
 
 void peekWhenEmptyStackShouldRertunAnEmptyString(){
-    Scope* scope = newScopeStack();
+    Scope* scope = createScopeStack();
 
     assert(strcmp((peek(scope, 1)), "") == 0);
 
@@ -73,7 +73,7 @@ void peekWhenEmptyStackShouldRertunAnEmptyString(){
 }
 
 void peekShouldWorkInAnyValidPosition(){
-    Scope* scope = newScopeStack();
+    Scope* scope = createScopeStack();
 
     push("1", &scope);
     push("2", &scope);
@@ -89,7 +89,7 @@ void peekShouldWorkInAnyValidPosition(){
 }
 
 void scopeStackSuite(){
-    newScopeStackCreateAnEmptyStack(); 
+    createScopeStackCreateAnEmptyStack(); 
     pushInAnEmptyStackShouldWork();
     pushInANotEmptyStackShouldWork();
     popAnEmptyStackShouldReturnAnEmptyString();
@@ -138,7 +138,7 @@ void setAfterMaxCapacityShouldWork(){
         setKeyValue(&table, scope, input, type);
     }
 
-    printTable(table);
+    //printTable(table);
 
     assert(length(table) == 20);
 
