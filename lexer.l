@@ -67,11 +67,13 @@ main                    {return(MAIN);}
 \"([^\"\\]|\\.)*\"      {yylval.sValue = strdup(yytext);
                          return STRING_LITERAL;} 
 \'([^\\\']|\\.)\'       {yylval.sValue = strdup(yytext);
-                         return CHAR_LITERAL;}  
--?[0-9]+                 {yylval.sValue = strdup(yytext); 
-                         return INT;}
--?[0-9]+\.[0-9]+          {yylval.sValue = strdup(yytext); 
-                         return DECIMAL;}
+                        return CHAR_LITERAL;}  
+-?[0-9]+                {yylval.sValue = strdup(yytext); 
+                        return INT;}
+-?[0-9]+\.[0-9]+        {yylval.sValue = strdup(yytext); 
+                        return DOUBLE;}
+-?[0-9]+\.[0-9]+[fF]    { yylval.sValue = strdup(yytext); 
+                        return FLOAT; }
 [a-zA-Z_][a-zA-Z0-9_]*  {yylval.sValue = strdup(yytext);
                          return ID;}      
 .                       {yyerror("Invalid character!");} 

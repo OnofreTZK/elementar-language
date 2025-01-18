@@ -1,13 +1,23 @@
 int main(){
 
-    float x = 11 / 7;
-    float y = 13 / 11;
-    int c = 8;
 
-    print(c);
-    float result = x**2 - y + c;
+    float value1 = intToFloat(11);
+    float value2 = intToFloat(7);
+    float x = value1 / value2;
+
+    float value3 = intToFloat(13);
+    float value4 = intToFloat(11);
+    float y = value3 / value4;
+
+    int c = 8;
+    float float_c = intToFloat(c);
+
+    float exponent = intToFloat(2);
+    float result = x^exponent - y + float_c;
+
+    print("Resultado final: ");
     print(result);
+    print("\n");
 
     //resultado esperado: 9.287569573283859
-
-}
+};
