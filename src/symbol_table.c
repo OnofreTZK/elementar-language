@@ -3,12 +3,10 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include "types.h"
 #include "util.h"
+#include "types.h"
 
 #define INITIAL_CAPACITY 16
-#define FNV_OFFSET 14695981039346656037UL
-#define FNV_PRIME 1099511628211UL
 
 SymbolTable * createSymbolTable(){
     SymbolTable* table = malloc(sizeof(SymbolTable));
@@ -23,20 +21,9 @@ SymbolTable * createSymbolTable(){
     return table;
 }
 
-// No proprietary code
-// Source: https://benhoyt.com/writings/hash-table-in-c/
-static uint64_t hash(const char* key) {
-    uint64_t hash = FNV_OFFSET;
-    for (const char* p = key; *p; p++) {
-        hash ^= (uint64_t)(unsigned char)(*p);
-        hash *= FNV_PRIME;
-    }
-    return hash;
-}
-
 static const char* setEntry(Symbol** entries, unsigned int capacity,
         const char* key, const char* value, unsigned int* plength) {
-    uint64_t keyhash = hash(key);
+    uint64_t keyhash = generateHash(key);
     unsigned int index = (unsigned int)(keyhash & (uint64_t)(capacity - 1));
 
     while ((*entries)[index].key != NULL) {
@@ -99,7 +86,7 @@ void setKeyValue(SymbolTable** table, char* scope, char* id, const char* type) {
 
 void* getValue(SymbolTable* table, char* scope, char* id) {
     char* prehash = concat(scope, id, "", "", "");
-    uint64_t keyhash = hash(prehash);
+    uint64_t keyhash = generateHash(prehash);
     unsigned int index = (unsigned int)(keyhash & (uint64_t)(table->capacity - 1));
 
 
@@ -117,11 +104,7 @@ void* getValue(SymbolTable* table, char* scope, char* id) {
     return NULL;
 }
 
-unsigned int length(SymbolTable* table) {
-    return table->length;
-}
-
-void printTable(SymbolTable* table){
+void printSymbolTable(SymbolTable* table){
    Symbol* ptr = table->symbols;;
 
    unsigned int size = table->capacity;
@@ -132,7 +115,7 @@ void printTable(SymbolTable* table){
     }
 }
 
-void destroyTable(SymbolTable** table){
+void destroySymbolTable(SymbolTable** table){
     for(unsigned int i = 0; i < (*table)->capacity; i++){
         free((void*)(*table)->symbols[i].key);
     }

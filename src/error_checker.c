@@ -4,8 +4,8 @@
 #include "../include/util.h"
 #include <string.h>
 
-extern SymbolTable *symbol_table;
-extern Scope *scope_stack;
+extern SymbolTable *stable;
+extern Scope *scope;
 extern char *filename; // Nome do arquivo sendo analisado
 
 // Função auxiliar para relatar erros usando yyerror
@@ -35,7 +35,7 @@ void add_symbol_to_scope(const char *name, const char *type, int line, int colum
         }
     }
 
-    const char *current_scope = top(scope_stack);
+    const char *current_scope = top(scope);
 
     if (is_symbol_in_scope(name)) {
         char msg[256];
@@ -44,20 +44,20 @@ void add_symbol_to_scope(const char *name, const char *type, int line, int colum
         return;
     }
 
-    setKeyValue(&symbol_table, (char *)current_scope, (char *)name, type);
+    setKeyValue(&stable, (char *)current_scope, (char *)name, type);
 }
 
 
 // Verifica se um símbolo está no escopo atual
 int is_symbol_in_scope(const char *name) {
-    const char *current_scope = top(scope_stack);
-    return getValue(symbol_table, (char *)current_scope, (char *)name) != NULL;
+    const char *current_scope = top(scope);
+    return getValue(stable, (char *)current_scope, (char *)name) != NULL;
 }
 
 // Obtém o tipo de um símbolo no escopo atual
 const char *get_symbol_type_in_scope(const char *name) {
-    const char *current_scope = top(scope_stack);
-    return (const char *)getValue(symbol_table, (char *)current_scope, (char *)name);
+    const char *current_scope = top(scope);
+    return (const char *)getValue(stable, (char *)current_scope, (char *)name);
 }
 
 // Verifica erros de tipo em retorno de função
@@ -111,17 +111,17 @@ void check_variable_redeclaration(const char *name, int line, int column) {
 }
 
 void check_undefined_variable(const char *name, int line, int column) {
-    if (!scope_stack) {
+    if (!scope) {
         report_error("Pilha de escopos não inicializada.", line, column);
         exit(1);
     }
 
-    if (!symbol_table) {
+    if (!stable) {
         report_error("Tabela de símbolos não inicializada.", line, column);
         exit(1);
     }
 
-    const char *current_scope = top(scope_stack);
+    const char *current_scope = top(scope);
 
     if (!current_scope) {
         report_error("Escopo atual não encontrado.", line, column);
@@ -129,7 +129,7 @@ void check_undefined_variable(const char *name, int line, int column) {
     }
 
     // Verifica se a variável existe na tabela de símbolos
-    if (!getValue(symbol_table, (char *)current_scope, (char *)name)) {
+    if (!getValue(stable, (char *)current_scope, (char *)name)) {
         char msg[256];
         snprintf(msg, sizeof(msg), "Variável '%s' não declarada.", name);
         report_error(msg, line, column);
@@ -157,9 +157,9 @@ void check_arithmetic_operation(const char *op, const char *type1, const char *t
 
 // Gerenciamento de escopos
 void enter_scope(const char *scope_name) {
-    push((char *)scope_name, &scope_stack);
+    push((char *)scope_name, &scope);
 }
 
 void exit_scope() {
-    pop(&scope_stack);
+    pop(&scope);
 }

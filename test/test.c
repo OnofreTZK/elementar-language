@@ -4,6 +4,7 @@
 #include "types.h"
 #include "scope_stack.h"
 #include "symbol_table.h"
+#include "function_table.h"
 
 // Scope Stack tests
 // ************************************************************************************************
@@ -105,13 +106,13 @@ void scopeStackSuite(){
 void createSymbolTableHasNullTable(){
     SymbolTable* table = createSymbolTable();
     
-    for(int i = 0; i < 5; i++){
+    for(int i = 0; i < 16; i++){
         assert(table->symbols[i].value == NULL);
     }
     
-    assert(length(table) == 0);
+    assert(table->length == 0);
 
-    destroyTable(&table);
+    destroySymbolTable(&table);
 }
 
 void setASingleKeyValueShouldWork(){
@@ -122,9 +123,9 @@ void setASingleKeyValueShouldWork(){
 
     setKeyValue(&table, scope, id, type);
 
-    assert(length(table) == 1);
+    assert(table->length == 1);
 
-    destroyTable(&table);
+    destroySymbolTable(&table);
 }
 
 void setAfterMaxCapacityShouldWork(){
@@ -140,9 +141,9 @@ void setAfterMaxCapacityShouldWork(){
 
     //printTable(table);
 
-    assert(length(table) == 20);
+    assert(table->length == 20);
 
-    destroyTable(&table);
+    destroySymbolTable(&table);
 }
 
 void getASingleKeyValueShouldWork(){
@@ -153,13 +154,13 @@ void getASingleKeyValueShouldWork(){
 
     setKeyValue(&table, scope, id, type);
 
-    assert(length(table) == 1);
+    assert(table->length == 1);
 
     char* value = getValue(table, scope, id);
 
     assert(strcmp(value, type) == 0);
 
-    destroyTable(&table);
+    destroySymbolTable(&table);
 }
 
 void symbolTableSuite(){
@@ -170,9 +171,88 @@ void symbolTableSuite(){
 }
 // ************************************************************************************************
 
+// Symbol Table tests
+// ************************************************************************************************
+
+void createFunctionTableHasNullParameters(){
+    FunctionTable* table = createFunctionTable();
+    
+    for(int i = 0; i < 16; i++){
+        assert(table->functions[i].parameters == NULL);
+    }
+    
+    assert(table->length == 0);
+
+    destroyFunctionTable(&table);
+}
+
+void setASingleKeyFunctionShouldWork(){
+    FunctionTable* table = createFunctionTable();
+    char* scope = "global";
+    char* id = "myfunction";
+    char* parameters[3] = {"int", "int", "string"}; 
+    char* type = "int";
+
+    setKeyFunction(&table, scope, id, parameters, type);
+
+    assert(table->length == 1);
+
+    destroyFunctionTable(&table);
+}
+
+void setFuncAfterMaxCapacityShouldWork(){
+    FunctionTable* table = createFunctionTable();
+    char* scope = "global";
+    char* parameters[3] = {"int", "int", "string"}; 
+    char* type = "int";
+
+    for(unsigned int i = 0; i < 20; i++){
+        char input[20];
+        sprintf(input, "myfunction%d", i);
+        setKeyFunction(&table, scope, input, parameters, type);
+    }
+
+    //printTable(table);
+
+    assert(table->length == 20);
+
+    destroyFunctionTable(&table);
+}
+
+void getASingleKeyFunctionShouldWork(){
+    FunctionTable* table = createFunctionTable();
+    char* scope = "global";
+    char* id = "myfunction";
+    char* parameters[3] = {"int", "int", "string"}; 
+    char* type = "int";
+
+    setKeyFunction(&table, scope, id, parameters, type);
+
+    assert(table->length == 1);
+
+    Function* func = getFunction(table, scope, id);
+
+    assert(strcmp(func->type, type) == 0);
+
+    for(unsigned int i = 0; i < 3; i++){
+        assert(strcmp(func->parameters[i], parameters[i]) == 0);
+    }
+
+    destroyFunctionTable(&table);
+}
+
+void functionTableSuite(){
+    createFunctionTableHasNullParameters();
+    setASingleKeyFunctionShouldWork();
+    setFuncAfterMaxCapacityShouldWork();
+    getASingleKeyFunctionShouldWork();
+}
+// ************************************************************************************************
+
 int main() {
     scopeStackSuite();
     symbolTableSuite();
+    functionTableSuite();
     
     return 0;
 }

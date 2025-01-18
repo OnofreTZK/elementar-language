@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+
+#define FNV_OFFSET 14695981039346656037UL
+#define FNV_PRIME 1099511628211UL
 
 static int label_counter = 0;
 
@@ -51,5 +55,16 @@ char * getPrintType(char * variableType){
   } else {
     return "";
   }
+}
+
+// No proprietary code
+// Source: https://benhoyt.com/writings/hash-table-in-c/
+uint64_t generateHash(const char* key) {
+    uint64_t hash = FNV_OFFSET;
+    for (const char* p = key; *p; p++) {
+        hash ^= (uint64_t)(unsigned char)(*p);
+        hash *= FNV_PRIME;
+    }
+    return hash;
 }
 

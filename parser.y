@@ -7,6 +7,7 @@
 #include "file_save.h"
 #include "scope_stack.h"
 #include "symbol_table.h"
+#include "function_table.h"
 #include "error_checker.h"
 
 int yylex(void);
@@ -18,8 +19,9 @@ extern int get_column();
 extern char *yytext;
 extern FILE *yyin;
 
-Scope* scope_stack;
-SymbolTable* symbol_table;
+Scope* scope;
+SymbolTable* stable;
+FunctionTable* ftable;
 const char *current_function_return_type;
 
 #define FILENAME "./outputs/output.c"
@@ -286,13 +288,13 @@ declaration: type ID {
                 printf("VAR Declaration\n");
 
                 // Obtém o escopo atual
-                char* currentScope = top(scope_stack);
+                char* currentScope = top(scope);
 
                 // Verifica se a variável já foi declarada no escopo atual
                 add_symbol_to_scope($2, $1->code, yylineno, get_column());
 
                 // Insere a variável na tabela de símbolos
-                setKeyValue(&symbol_table, currentScope, $2, $1->code);
+                setKeyValue(&stable, currentScope, $2, $1->code);
 
                 // Lida com a declaração de strings e outros tipos
                 if (strcmp($1->opt1, "type string") == 0) { 
@@ -314,7 +316,7 @@ declaration: type ID {
 initialization: type ID ASSIGN expression {
                 printf("VAR Initialization\n");
 
-                char *currentScope = top(scope_stack);
+                char *currentScope = top(scope);
 
                 // Verifica se a variável já foi declarada no escopo atual
                 add_symbol_to_scope($2, $1->code, yylineno, get_column());
@@ -323,7 +325,7 @@ initialization: type ID ASSIGN expression {
                 check_assignment($2, $4->opt1, yylineno, get_column());
 
                 // Insere a variável na tabela de símbolos
-                setKeyValue(&symbol_table, currentScope, $2, $1->code);
+                setKeyValue(&stable, currentScope, $2, $1->code);
 
                 char *code;
 
@@ -349,14 +351,14 @@ initialization: type ID ASSIGN expression {
 assignment: ID ASSIGN expression {
                 printf("DEBUG: Iniciando assignment para '%s'.\n", $1);
 
-                if (!scope_stack) {
+                if (!scope) {
                     report_error("Pilha de escopos não inicializada.", yylineno, get_column());
                     $$ = createRecord("", ""); // Retorna um registro vazio
-                } else if (!symbol_table) {
+                } else if (!stable) {
                     report_error("Tabela de símbolos não inicializada.", yylineno, get_column());
                     $$ = createRecord("", ""); // Retorna um registro vazio
                 } else {
-                    char *currentScope = top(scope_stack);
+                    char *currentScope = top(scope);
 
                     if (!currentScope) {
                         report_error("Escopo atual não encontrado.", yylineno, get_column());
@@ -367,12 +369,12 @@ assignment: ID ASSIGN expression {
                         // Verifica se a variável foi declarada antes de ser usada
                         check_undefined_variable($1, yylineno, get_column());
 
-                        if (!getValue(symbol_table, currentScope, $1)) {
+                        if (!getValue(stable, currentScope, $1)) {
                             // Caso a variável não seja encontrada, retorna um registro vazio
                             $$ = createRecord("", "");
                         } else {
                             // Obtém o tipo da variável no escopo atual
-                            char *type = getValue(symbol_table, currentScope, $1);
+                            char *type = getValue(stable, currentScope, $1);
 
                             printf("DEBUG: Variável '%s' encontrada com tipo '%s'.\n", $1, type);
 
@@ -444,22 +446,20 @@ arithmetic_expression: unary_expression {
 
                         // Verifica tipos de identificadores
                         if (strcmp(type_left, "id") == 0) {
-                            char *currentScope = top(scope_stack);
-                            type_left = getValue(symbol_table, currentScope, $1->code);
+                            char *currentScope = top(scope);
+                            type_left = getValue(stable, currentScope, $1->code);
                             if (!type_left) {
                                 check_undefined_variable($1->code, yylineno, get_column());
                                 $$ = createRecord("", ""); // Retorna um registro vazio em caso de erro
-                                return;
                             }
                         }
 
                         if (strcmp(type_right, "id") == 0) {
-                            char *currentScope = top(scope_stack);
-                            type_right = getValue(symbol_table, currentScope, $3->code);
+                            char *currentScope = top(scope);
+                            type_right = getValue(stable, currentScope, $3->code);
                             if (!type_right) {
                                 check_undefined_variable($3->code, yylineno, get_column());
                                 $$ = createRecord("", ""); // Retorna um registro vazio em caso de erro
-                                return;
                             }
                         }
 
@@ -469,7 +469,6 @@ arithmetic_expression: unary_expression {
                         if (strcmp($2->code, "/") == 0 && strcmp(type_left, "int") == 0 && strcmp(type_right, "int") == 0) {
                             report_error("Divisão entre inteiros não permitida. Converta para 'float' ou 'double'.", yylineno, get_column());
                             $$ = createRecord("", ""); // Retorna um registro vazio em caso de erro
-                            return;
                         }
 
                         // **TODO: Não permitir tipos diferentes**
@@ -478,7 +477,6 @@ arithmetic_expression: unary_expression {
                             snprintf(msg, sizeof(msg), "Tipos incompatíveis na operação aritmética: '%s' e '%s'.", type_left, type_right);
                             report_error(msg, yylineno, get_column());
                             $$ = createRecord("", ""); // Retorna um registro vazio em caso de erro
-                            return;
                         }
 
                         char *code;
@@ -497,14 +495,12 @@ arithmetic_expression: unary_expression {
                                 snprintf(msg, sizeof(msg), "Operador '^' inválido para tipos '%s' e '%s'.", type_left, type_right);
                                 report_error(msg, yylineno, get_column());
                                 $$ = createRecord("", "");
-                                return;
                             }
                             $$ = createRecord(code, result_type);
                             free(code);
                             freeRecord($1);
                             freeRecord($2);
                             freeRecord($3);
-                            return;
                         }
 
                         // Operação específica: soma de strings
@@ -512,7 +508,6 @@ arithmetic_expression: unary_expression {
                             if (strcmp($2->code, "+") != 0) {
                                 report_error("Operações inválidas em strings. Apenas soma é permitida.", yylineno, get_column());
                                 $$ = createRecord("", "");
-                                return;
                             }
                             code = concat("concat(", $1->code, ",", $3->code, ")");
                             $$ = createRecord(code, "string");
@@ -600,7 +595,7 @@ expression: PAREN_OPEN expression PAREN_CLOSE {
 
 main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement {
             printf("main\n");
-            push("main", &scope_stack);
+            push("main", &scope);
 
             char * code = concat($1->code, " main", "(int argc, char *argv[])\n", $5->code, "");
             $$ = createRecord(code,"");
@@ -790,6 +785,13 @@ parameter_list_nonempty: type ID {
              
 function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement {
             printf("function_declaration\n");
+
+            char* currentScope = top(scope);
+
+            char* temporary[] = {"int", "string"};
+
+            setKeyFunction(&ftable, currentScope, $2, temporary, $1->code);
+
             char * code = concat($1->code, " ", $2, "(", $4->code);
             char * code2 = concat(code, ")", $6->code, "", "");
             $$ = createRecord(code2,"");
@@ -800,8 +802,6 @@ function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statem
             free(code2);
         }
         ;   
-
-
 
 argument_list: /* epsilon */  {
                 //printf("argument_list\n");
@@ -833,9 +833,9 @@ function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
         
         if(strcmp($1, "print") == 0) { 
 
-            char* currentScope = top(scope_stack);
+            char* currentScope = top(scope);
             
-            char* type = getValue(symbol_table, currentScope, $3->code);
+            char* type = getValue(stable, currentScope, $3->code);
 
             //TODO: se variável não existir, retornar um erro!
 
@@ -935,20 +935,18 @@ char* get_extension(char* pointer, int len) {
 
 int main(int argc, char *argv[]) { 
 
-    scope_stack = createScopeStack();
-    symbol_table = createSymbolTable();
+    scope = createScopeStack();
+    stable = createSymbolTable();
+    ftable = createFunctionTable();
 
-    // Verifica se o número de argumentos está correto
     if (argc != 2) {
         printf("Usage: %s <source file>\n", argv[0]);
         return 1;
     }
 
-    // Nome do arquivo de entrada
     char* input_file = argv[1]; 
     char* ext_pointer = strrchr(input_file, '.');
 
-    // Verifica se o arquivo possui extensão válida
     if (!ext_pointer) {
         printf("Invalid source file!\n");
         return 1;
@@ -965,26 +963,23 @@ int main(int argc, char *argv[]) {
 
     free(ext);
 
-    // Abre o arquivo de entrada
     yyin = fopen(input_file, "r");
     if (!yyin) {
         printf("Error: Cannot open file %s\n", input_file);
         return 1;
     }
 
-    // Declara e inicializa a variável global filename
     extern char *filename;
-    filename = input_file; // Usa o nome do arquivo fornecido como argumento
+    filename = input_file; 
 
-    // Inicia o escopo global
-    push("global", &scope_stack);
+    push("global", &scope);
 
-    // Inicia o parsing
     yyparse();  
 
-    // Libera recursos
-    destroyStack(&scope_stack);
-    destroyTable(&symbol_table);
+
+    destroyStack(&scope);
+    destroySymbolTable(&stable);
+    destroyFunctionTable(&ftable);
 
     fclose(yyin);
     return 0;
