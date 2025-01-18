@@ -299,25 +299,43 @@ term: STRING_LITERAL {
 
         //TODO: checar se a variável é um array e que existe
 
-        char * code = concat("*(int*)getFromList(", $1, ",", $3, ")");
-        $$ = createRecord(code,"array");
+        char * escope = top(stack);
+        char * type = getValue(table, escope, $1);
+        char * castCode = getTypeCast(type);
+
+
+        char * code = concat(castCode, "getFromList(", $1, ",", $3);
+        char * code2 = concat(code, ")", "", "","");
+        $$ = createRecord(code2,"array");
         free(code);
+        free(code2);
+        //free(castCode);
+        //free(escope);
+        //free(type);
     }
     ;                
 
 declaration: type ID {
                 printf("VAR Declaration\n");
 
-                //char* currentScope = top(scopeStack);
-
                 //TODO: checar aqui se a variável já foi declarada
 
-                //setKeyValue(&symbolTable, currentScope, $2, $1->code);
-
-                //TODO: lidar com a declaração de arrays
                 char* currentScope = top(stack);
+                char * variableType;
 
-                setKeyValue(&table, currentScope, $2, $1->code);
+                if(strcmp($1->code, "DynamicList* ") == 0) {
+                    printf("É uma lista\n");
+                    printf("%s\n", $1->code);
+                    variableType = concat($1->opt1, "", "", "","");
+                } else {
+                    printf("Não é uma lista\n");
+                    printf("%s\n", $1->code);
+                    variableType = concat($1->code, "", "", "","");
+                }
+
+                setKeyValue(&table, currentScope, $2, variableType);
+
+                free(variableType);
 
                 if (strcmp($1->opt1, "type string") == 0) { 
 
@@ -350,8 +368,22 @@ initialization: type ID ASSIGN expression {
                 // São evaluados. Então aqui o escopo atual não serve como 
                 //referencia verdadeira
                 char* currentScope = top(stack);
+                char * variableType;
 
-                setKeyValue(&table, currentScope, $2, $1->code);
+                printf("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n");
+
+                if(strcmp($1->code, "DynamicList* ") == 0) {
+                    printf("É uma lista\n");
+                    printf("%s\n", $1->code);
+                    variableType = concat($1->opt1, "", "", "","");
+                } else {
+                    printf("Não é uma lista\n");
+                    printf("%s\n", $1->code);
+                    variableType = concat($1->code, "", "", "","");
+                }
+
+                setKeyValue(&table, currentScope, $2, variableType);
+                free(variableType);
 
                 if(strcmp($4->opt1, "array") == 0) {
 

@@ -13,5 +13,6 @@ char *replace(char *str, char *old_str, char *new_str);
 char *getTypeValue(char * type);
 char* getSecondElement(const char* str);
 int isIdentifier(const char *str);
+char * getTypeCast(char * type);
 
 #endif

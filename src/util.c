@@ -101,6 +101,22 @@ char * getTypeValue(char * type){
   }
 }
 
+char * getTypeCast(char * type){
+  if (strcmp(type, "int[]") == 0){
+    return "*(int*)";
+  } else if (strcmp(type, "float[]") == 0){
+    return  "*(float*)";
+  } else if (strcmp(type, "string[]") == 0){
+    return "*(char*)" ;
+  } else if (strcmp(type, "double[]") == 0){
+    return "*(double*)";
+  } else if (strcmp(type, "bool[]") == 0){
+    return "*(short int*)";
+  } else {
+    return "";
+  }
+}
+
 char* getSecondElement(const char* str) {
 
   char *temp_str = strdup(str); 
