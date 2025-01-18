@@ -15,28 +15,38 @@ int main(){
 
         if(numero >= 0 && numero <= 25){
             interval1++;
+            continue;
+        };
 
-        } else if(numero >= 26 && numero <= 50){
+        if(numero >= 26 && numero <= 50){
             interval2++;
-
-        } else if(numero >= 51 && numero <= 75){
+            continue;
+        };
+        
+        if(numero >= 51 && numero <= 75){
             interval3++;
-
-        }  else if(numero >= 76 && numero <= 100){
+            continue;
+        };
+        
+        if(numero >= 76 && numero <= 100){
             interval4++;
-        }
+        };
     };
 
     print("Números no intervalo [0, 25] \n");
     print(interval1);
+    print("\n");
 
     print("Números no intervalo [26, 50] \n");
     print(interval2);
+    print("\n");
 
     print("Números no intervalo [51, 75] \n");
     print(interval3);
+    print("\n");
 
     print("Números no intervalo [76, 100] \n");
     print(interval4);
+    print("\n");
 
-}
+};

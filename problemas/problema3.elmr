@@ -1,0 +1,76 @@
+int main() {
+    // Leitura das dimensões da matriz A
+    print("Digite o número de linhas da matriz A: ");
+    int linhasA = readInt();
+    print("Digite o número de colunas da matriz A: ");
+    int colunasA = readInt();
+
+    // Leitura das dimensões da matriz B
+    print("Digite o número de linhas da matriz B: ");
+    int linhasB = readInt();
+    print("Digite o número de colunas da matriz B: ");
+    int colunasB = readInt();
+
+    // Declaração das matrizes
+    int[][] A = newMatrix(linhasA, colunasA);
+    int[][] B = newMatrix(linhasB, colunasB);
+
+    // Leitura da matriz A
+    print("Digite os elementos da matriz A:\n");
+    for (int i = 0; i < linhasA; i++) {
+        for (int j = 0; j < colunasA; j++) {
+            A[i][j] = readInt();
+        };
+    };
+
+    // Leitura da matriz B
+    print("Digite os elementos da matriz B:\n");
+    for (int i = 0; i < linhasB; i++) {
+        for (int j = 0; j < colunasB; j++) {
+            B[i][j] = readInt();
+        };
+    };
+
+    // Soma das matrizes
+    if (linhasA =? linhasB && colunasA =? colunasB) {
+        int[][] soma = newMatrix(linhasA, colunasA);
+        for (int i = 0; i < linhasA; i++) {
+            for (int j = 0; j < colunasA; j++) {
+                soma[i][j] = A[i][j] + B[i][j];
+            };
+        };
+
+        print("Soma das matrizes:\n");
+        for (int i = 0; i < linhasA; i++) {
+            for (int j = 0; j < colunasA; j++) {
+                print(soma[i][j] + " ");
+            };
+            print("\n");
+        };
+    } else {
+        print("Soma das matrizes não é possível (dimensões diferentes).\n");
+    };
+
+    // Multiplicação das matrizes
+    if (colunasA =? linhasB) {
+        int[][] produto = newMatrix(linhasA, colunasB);
+        for (int i = 0; i < linhasA; i++) {
+            for (int j = 0; j < colunasB; j++) {
+                produto[i][j] = 0;
+                for (int k = 0; k < colunasA; k++) {
+                    produto[i][j] = produto[i][j] + (A[i][k] * B[k][j]);
+                };
+            };
+        };
+
+        print("Produto das matrizes:\n");
+        for (int i = 0; i < linhasA; i++) {
+            for (int j = 0; j < colunasB; j++) {
+                print(produto[i][j] + " ");
+            };
+            print("\n");
+        };
+    } else {
+        print("Multiplicação das matrizes não é possível (dimensões incompatíveis).\n");
+    };
+};

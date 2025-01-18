@@ -241,6 +241,14 @@ statement: declaration {
                 //printf("SEMICOLON\n");
                 $$ = createRecord("","semicolon");
             }
+            | BREAK {
+                //printf("BREAK\n");
+                $$ = createRecord("break","break");
+            }
+            | CONTINUE {
+                //printf("BREAK\n");
+                $$ = createRecord("continue","break");
+            }
          ;
 
 term: STRING_LITERAL {
@@ -311,18 +319,7 @@ declaration: type ID {
 
 initialization: type ID ASSIGN expression {
                 printf("VAR Initialization \n");
-
-                //char* currentScope = top(scopeStack);
-
                 //TODO: checar aqui se a variável já foi declarada
-
-                //printf("currentScope: %s\n", currentScope);
-                //printf("nome da variável: %s\n", $2);
-                //printf("tipo da variável: %s\n", $1->code);
-
-               // setKeyValue(&symbolTable, currentScope, $2, $1->code);
-
-
                 //TODO: lidar com declaração de arrays
 
                 char * code;
@@ -652,9 +649,13 @@ while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement {
     char *label_start = generateLabel("while_start_");
     char *label_end = generateLabel("while_end_");
 
+    char *block_code = $5->code;
+    char *treated_block_code = strdup(replace(block_code, "continue", concat("goto ", label_start, ";\n", "", "")));
+    char *treated_block_code2 = strdup(replace(treated_block_code, "break", concat("goto ", label_end, ";\n", "", "")));
+
     char *code = concat(label_start, ":\nif (!(", $3->code, ")) goto ", "");
     char *code2 = concat(code, label_end, ";\n", "", "");
-    char *code3 = concat(code2, $5->code, "\ngoto ", label_start, ";\n");
+    char *code3 = concat(code2, treated_block_code2, "\ngoto ", label_start, ";\n");
     char *code4 = concat(code3, label_end, ":\n", "", "");
 
     printf("while_statement: %s\n", code4);
@@ -669,6 +670,8 @@ while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement {
     free(code2);
     free(code3);
     free(code4);
+    free(treated_block_code);
+    free(treated_block_code2);
 }
 ;
 

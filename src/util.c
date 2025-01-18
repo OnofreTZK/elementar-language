@@ -48,3 +48,39 @@ char * getPrintType(char * variableType){
   }
 }
 
+char* replace(char *str, char *old_str, char *new_str) {
+    char *result;
+    int i, count = 0;
+    int new_len = strlen(new_str);
+    int old_len = strlen(old_str);
+
+    // Contar o número de ocorrências da string a ser substituída
+    for (i = 0; str[i] != '\0'; i++) {
+        if (strstr(&str[i], old_str) == &str[i]) {
+            count++;
+            i += old_len - 1;
+        }
+    }
+
+    // Alocar memória para a nova string
+    result = (char *)malloc(i + count * (new_len - old_len) + 1);
+    if (result == NULL) {
+        fprintf(stderr, "Erro ao alocar memória\n");
+        exit(1);
+    }
+
+    i = 0;
+    while (*str) {
+        if (strstr(str, old_str) == str) {
+            strcpy(&result[i], new_str);
+            i += new_len;
+            str += old_len;
+        } else {
+            result[i++] = *str++;
+        }
+    }
+    result[i] = '\0';
+
+    return result;
+}
+
