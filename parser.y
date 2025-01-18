@@ -333,17 +333,17 @@ initialization: type ID ASSIGN expression {
                     code = concat($1->code, " ", $2, " = ", $4->code); // Demais tipos
                 }
 
-                char *final_code = concat(code, ";\n", "", "", "");
-                $$ = createRecord(final_code, "");
+                // Remove o `;\n` aqui
+                $$ = createRecord(code, "");
 
-                printf("initialization: %s\n", final_code);
+                printf("initialization: %s\n", code);
 
                 free(code);
-                free(final_code);
                 freeRecord($1);
                 freeRecord($4);
             }
             ;
+
 
 
 assignment: ID ASSIGN expression {
@@ -437,105 +437,82 @@ arithmetic_expression: unary_expression {
                         freeRecord($1);
                     }
                     | arithmetic_expression arithmetic_operator unary_expression {
-                        printf("DEBUG: Operação aritmética entre '%s' e '%s'.\n", $1->opt1, $3->opt1);
 
-                        char *type_left = $1->opt1;
-                        char *type_right = $3->opt1;
+                        //TODO: não permitir divisão entre inteiros, o usuário deveria converter para float ou double antes disso
+                        //TODO: não permitir operações entre tipos diferentes
 
-                        // Verifica tipos de identificadores
-                        if (strcmp(type_left, "id") == 0) {
-                            char *currentScope = top(scope_stack);
-                            type_left = getValue(symbol_table, currentScope, $1->code);
-                            if (!type_left) {
-                                check_undefined_variable($1->code, yylineno, get_column());
-                                $$ = createRecord("", ""); // Retorna um registro vazio em caso de erro
-                                return;
-                            }
+                        printf("XXXXXXXXXXXXXXXXXXXXXXXx\n");
+                        printf("Type of the unary expression: %s\n", $3->opt1);
+                        printf("Code: %s\n", $3->code);
+
+                        char * type;
+
+                        if(strcmp($1->opt1, "id") == 0){
+                            printf("Era um id\n");
+                            char* currentScope = top(scope_stack);
+                            type = getValue(symbol_table, currentScope, $3->code);
+                            
+                            printf("type recebido: %s\n", type);
+                        } else {
+                            type = $1->opt1;
                         }
 
-                        if (strcmp(type_right, "id") == 0) {
-                            char *currentScope = top(scope_stack);
-                            type_right = getValue(symbol_table, currentScope, $3->code);
-                            if (!type_right) {
-                                check_undefined_variable($3->code, yylineno, get_column());
-                                $$ = createRecord("", ""); // Retorna um registro vazio em caso de erro
-                                return;
-                            }
-                        }
+                        printf("Type after checking ids expression: %s\n", type);
 
-                        printf("DEBUG: Tipos verificados: '%s' e '%s'.\n", type_left, type_right);
+                      
+                        if (strcmp(type, "float") == 0 && strcmp($2->code, "^") == 0) {
 
-                        // **TODO: Não permitir divisão entre inteiros**
-                        if (strcmp($2->code, "/") == 0 && strcmp(type_left, "int") == 0 && strcmp(type_right, "int") == 0) {
-                            report_error("Divisão entre inteiros não permitida. Converta para 'float' ou 'double'.", yylineno, get_column());
-                            $$ = createRecord("", ""); // Retorna um registro vazio em caso de erro
-                            return;
-                        }
+                            char * code = concat("powf(", $1->code, ",", $3->code, ")");
+                            printf("arithmetic_expression (float pow): %s\n", code);
 
-                        // **TODO: Não permitir tipos diferentes**
-                        if (!is_compatible(type_left, type_right)) {
-                            char msg[256];
-                            snprintf(msg, sizeof(msg), "Tipos incompatíveis na operação aritmética: '%s' e '%s'.", type_left, type_right);
-                            report_error(msg, yylineno, get_column());
-                            $$ = createRecord("", ""); // Retorna um registro vazio em caso de erro
-                            return;
-                        }
-
-                        char *code;
-                        char *result_type = NULL;
-
-                        // Operação específica: potência
-                        if (strcmp($2->code, "^") == 0) {
-                            if (strcmp(type_left, "float") == 0 || strcmp(type_right, "float") == 0) {
-                                result_type = "float";
-                                code = concat("powf(", $1->code, ",", $3->code, ")");
-                            } else if (strcmp(type_left, "double") == 0 || strcmp(type_right, "double") == 0) {
-                                result_type = "double";
-                                code = concat("pow(", $1->code, ",", $3->code, ")");
-                            } else {
-                                char msg[256];
-                                snprintf(msg, sizeof(msg), "Operador '^' inválido para tipos '%s' e '%s'.", type_left, type_right);
-                                report_error(msg, yylineno, get_column());
-                                $$ = createRecord("", "");
-                                return;
-                            }
-                            $$ = createRecord(code, result_type);
+                            $$ = createRecord(code,"float");
                             free(code);
-                            freeRecord($1);
-                            freeRecord($2);
-                            freeRecord($3);
-                            return;
-                        }
 
-                        // Operação específica: soma de strings
-                        if (strcmp(type_left, "string") == 0 && strcmp(type_right, "string") == 0) {
-                            if (strcmp($2->code, "+") != 0) {
-                                report_error("Operações inválidas em strings. Apenas soma é permitida.", yylineno, get_column());
-                                $$ = createRecord("", "");
-                                return;
-                            }
-                            code = concat("concat(", $1->code, ",", $3->code, ")");
-                            $$ = createRecord(code, "string");
+                        } else if (strcmp(type, "double") == 0 && strcmp($2->code, "^")  == 0) {
+
+                            char * code = concat("pow(", $1->code, ",", $3->code, ")");
+                            printf("arithmetic_expression (double pow): %s\n", code);
+
+                            $$ = createRecord(code,$3->opt1);
+                            free(code);
+
+                        } else if(strcmp(type, "string") == 0 && strcmp($3->opt1, "string") == 0) {
+
+                            // TODO: checar se o operador é soma. Do contrário gerar erro
+                            // TODO: ver o que acontece quando algum dos lados for uma chamada de função ou id
+
+                            char * code = concat("concat(", $1->code, ",", $3->code, ")");
+                            $$ = createRecord(code,"string");
+                            free(code);
+
+                        } else if(strcmp(type, "float") == 0 && strcmp($3->opt1, "float") == 0) {
+
+                            char * code = concat("(float)", $1->code, $2->code, $3->code, "");
+                            $$ = createRecord(code,"float");
+                            free(code);
+
+                        } else if(strcmp(type, "double") == 0 && strcmp($3->opt1, "double") == 0) {
+
+                            char * code = concat("(double)", $1->code, $2->code, $3->code, "");
+                            $$ = createRecord(code,"double");
                             free(code);
                         } else {
-                            // Combina os códigos e define o tipo resultante
-                            if (strcmp(type_left, "float") == 0 || strcmp(type_right, "float") == 0) {
-                                result_type = "float";
-                            } else if (strcmp(type_left, "double") == 0 || strcmp(type_right, "double") == 0) {
-                                result_type = "double";
-                            } else {
-                                result_type = type_left; // Ambos são do mesmo tipo
-                            }
-                            code = concat($1->code, $2->code, $3->code, "", "");
-                            $$ = createRecord(code, result_type);
+
+                           
+                            char * code = concat($1->code, $2->code, $3->code, "", "");
+                            printf("arithmetic_expression 42: %s\n", code);
+
+                            $$ = createRecord(code,$3->opt1);
                             free(code);
+
                         }
 
-                        printf("DEBUG: Código gerado: %s\n", $$->code);
+                        // Checar se é soma de 2 strings. Se for, usar strcat
 
                         freeRecord($1);
                         freeRecord($2);
                         freeRecord($3);
+                       
                     }
                     ;
 
@@ -892,6 +869,7 @@ function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
         freeRecord($3);
     }
     ;
+
 
 block_statement: BLOCK_BEGIN statement_list SEMICOLON BLOCK_END {
        
