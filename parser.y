@@ -123,10 +123,10 @@ type: TYPE_INT {$$ = createRecord("int","type int");}
     | TYPE_STRING {$$ = createRecord("char","type string");}
     | TYPE_VOID {$$ = createRecord("void","type void");}
     | TYPE_SHORT {$$ = createRecord("short","type short");}
-    | TYPE_INT BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("int[]","type int[]");}
-    | TYPE_FLOAT BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("float[]","type float[]");}
-    | TYPE_BOOL BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("short int[]","type bool[]");}
-    | TYPE_STRING BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("string[]","type string[]");}
+    | TYPE_INT BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("DynamicList* ","int[]");}
+    | TYPE_FLOAT BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("DynamicList* ","float[]");}
+    | TYPE_BOOL BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("DynamicList* ","bool[]");}
+    | TYPE_STRING BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("DynamicList* ","string[]");}
     ;
 
 boolean_operator: OR {
@@ -344,7 +344,16 @@ initialization: type ID ASSIGN expression {
 
                 setKeyValue(&table, currentScope, $2, $1->code);
 
-                if (strcmp($1->code, "string") == 0) { 
+                if(strcmp($4->opt1, "array") == 0) {
+
+                    char * dataType = getTypeValue($1->opt1);
+                    char * listReplaced = strdup(replace($4->code, "type", dataType));
+                    char * code3 = concat($1->code, " ", $2, " = ", listReplaced);
+                    code2 = concat(code3, "", "", "", "");
+                    free(listReplaced);
+                    //free(dataType);
+
+                } else if (strcmp($1->code, "string") == 0) { 
                     //TODO: passar da expressão o tamanho da string
                     //TODO: definir o tamanho da string pela expressão
                     //TODO: é para gerar um erro aqui caso a expressão não seja uma string
@@ -384,7 +393,7 @@ initialization: type ID ASSIGN expression {
 
                 printf("initialization: %s\n", code2);
                 
-                free(code);
+                //free(code);
                 free(code2);
                 freeRecord($1);
                 freeRecord($4);
@@ -405,7 +414,7 @@ assignment: ID ASSIGN expression {
                     char * code = concat($1, "=", $3->code,$1, ")");
                     free(code);
 
-                } else {
+                }  else {
                     char * code = concat($1, "=", $3->code, "", "");
                     $$ = createRecord(code,"");
                     free(code);
@@ -588,7 +597,7 @@ expression: PAREN_OPEN expression PAREN_CLOSE {
             freeRecord($1);
         }
         | BRACKET_OPEN BRACKET_CLOSE {
-            $$ = createRecord("[]","array");
+            $$ = createRecord("createList(50, type )","array");
         }
         ;
 
@@ -882,6 +891,40 @@ function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
         } else if(strcmp($1, "readChar") == 0){
             char * code = concat("scanf(\" %c\", ", "","","","");
             $$ = createRecord(code,"input");
+
+        } else if(strcmp($1, "addToList") == 0){
+
+            //TODO: checar se o tipo inserido é o mesmo tipo da lista
+
+            char * secondArgument = getSecondElement($3->code);
+            if (secondArgument == NULL) {
+              //TODO: gerar um erro
+              printf("ERROR: The function addToList requires two arguments\n");
+
+            } else if(isIdentifier(secondArgument)) { //Se for uma variável, pega o endereço dela
+
+                char * withAdress = concat("&", secondArgument, "", "", "");
+
+                printf("THE SECOND ARGUMENT IS: %s\n", secondArgument);
+
+                char * replaced = replace($3->code, secondArgument, withAdress);
+
+                printf("THE REPLACED IS: %s\n", replaced);
+
+                char * code = concat("addToList", "(", replaced, "", ")");
+
+                printf("THE CODE IS: %s\n", code);
+
+                $$ = createRecord(code,"addToList");
+                free(code);
+                free(withAdress);
+                free(replaced);
+
+            } else { // Se for um literal (não funciona porque a lista espera um endereço)
+                char * code = concat("addToList", "(", $3->code, "", ")");
+                $$ = createRecord(code,"addToList");
+                free(code);
+            }
 
         } else {
             char * code = concat($1, "(", $3->code, ")", ""); 

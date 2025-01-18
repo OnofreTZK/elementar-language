@@ -1,0 +1,7 @@
+int main(){
+
+    int[] teste = [];
+    int valor1 = 12;
+    addToList(teste, 1);
+    addToList(teste, valor1);
+};

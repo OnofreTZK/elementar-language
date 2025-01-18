@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 static int label_counter = 0;
 
@@ -48,7 +49,7 @@ char * getPrintType(char * variableType){
   }
 }
 
-char* replace(char *str, char *old_str, char *new_str) {
+char *replace(char *str, char *old_str, char *new_str) {
     char *result;
     int i, count = 0;
     int new_len = strlen(new_str);
@@ -84,3 +85,60 @@ char* replace(char *str, char *old_str, char *new_str) {
     return result;
 }
 
+char * getTypeValue(char * type){
+  if (strcmp(type, "int[]") == 0){
+    return "INT_TYPE";
+  } else if (strcmp(type, "float[]") == 0){
+    return "FLOAT_TYPE";
+  } else if (strcmp(type, "string[]") == 0){
+    return "STRING_TYPE";
+  } else if (strcmp(type, "double[]") == 0){
+    return "DOUBLE_TYPE";
+  } else if (strcmp(type, "bool[]") == 0){
+    return "BOOL_TYPE";
+  } else {
+    return "";
+  }
+}
+
+char* getSecondElement(const char* str) {
+
+  char *temp_str = strdup(str); 
+  char *token = strtok(temp_str, ","); 
+
+  if (token == NULL) {
+      fprintf(stderr, "Não há elementos suficientes.\n");
+      free(temp_str); 
+      return NULL;
+  }
+
+  token = strtok(NULL, ",");
+  if (token == NULL) {
+      fprintf(stderr, "Não há segundo elemento.\n");
+      free(temp_str); 
+      return NULL;
+  }
+
+  char *result = strdup(token); 
+  free(temp_str);
+  return result;
+}
+
+int isIdentifier(const char *str) {
+    if (*str == '\0') {
+        return 0; // String vazia não é um identificador
+    }
+
+    if (!isalpha(*str) && *str != '_') {
+        return 0; // Primeiro caractere inválido
+    }
+
+    while (*str) {
+        if (!isalnum(*str) && *str != '_') {
+            return 0; // Caractere inválido no meio da string
+        }
+        str++;
+    }
+
+    return 1; // É um identificador válido
+}
