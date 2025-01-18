@@ -9,7 +9,7 @@ help:
 build_compiler:
 	@flex lexer.l
 	@bison parser.y -o y.tab.c -d -v -g
-	@gcc lex.yy.c y.tab.c src/util.c src/record.c src/file_save.c -o compiler
+	@gcc lex.yy.c y.tab.c -Iinclude src/* -o compiler
 
 clear_files:
 	@rm -rf lex.yy.c y.gv y.output y.tab.c y.tab.h compiler

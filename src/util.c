@@ -31,3 +31,20 @@ char * generateLabel(const char *prefix) {
   snprintf(label, 32, "%s_%d", prefix, label_counter++); 
   return label;
 }
+
+char * getPrintType(char * variableType){
+  if (strcmp(variableType, "int") == 0){
+    return "%d";
+  } else if (strcmp(variableType, "float") == 0){
+    return "%f";
+  } else if (strcmp(variableType, "char") == 0){
+    return "%c";
+  } else if (strcmp(variableType, "string") == 0){
+    return "%s";
+  } else if (strcmp(variableType, "double") == 0){
+    return "%lf";
+  } else {
+    return "";
+  }
+}
+

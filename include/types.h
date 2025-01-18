@@ -7,4 +7,15 @@ typedef struct _Scope {
   struct _Scope * next;
 } Scope ;
 
+typedef struct _Symbol {
+  const char* key;
+  char* value;
+} Symbol ;
+
+typedef struct _SymbolTable {
+  Symbol* symbols;
+  unsigned int capacity;
+  unsigned int length;
+} SymbolTable ;
+
 #endif

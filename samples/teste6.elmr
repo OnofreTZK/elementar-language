@@ -1,5 +1,10 @@
 int main(){
 
+
+    int teste = 10;
+    print(teste);
+
+    /*
     string a = "Hello";
     string b = " World!";
     string teste = "Hello" + " World";
@@ -36,7 +41,7 @@ int main(){
     if(db){
         print("D é true\n");
     };
-
+    */
     
     /*
     print("Vamos ler uma string: \n");

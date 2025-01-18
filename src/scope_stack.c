@@ -5,6 +5,9 @@
 
 Scope* createNode(char* label, unsigned int pos){
 	Scope * scope = malloc(sizeof(Scope));
+	if(!scope){
+		return NULL;
+	}
 
 	scope->label = label;
 	scope->position = pos;
@@ -13,7 +16,7 @@ Scope* createNode(char* label, unsigned int pos){
 	return scope;
 }
 
-Scope* newScopeStack() {
+Scope* createScopeStack() {
 	Scope* scope = NULL;
 
 	return scope;
@@ -71,5 +74,11 @@ char* peek(Scope* stack, int position) {
 		return "";
 	} else {
 		return label;
+	}
+}
+
+void destroyStack(Scope** stack) {
+	while(*stack != NULL){
+		pop(stack);
 	}
 }

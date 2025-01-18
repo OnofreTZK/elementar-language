@@ -2,15 +2,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "./src/util.h"
-#include "./src/record.h"
-#include "./src/file_save.h"
+#include "util.h"
+#include "record.h"
+#include "file_save.h"
+#include "scope_stack.h"
+#include "symbol_table.h"
 
 int yylex(void);
 int yyerror(char *s);
 extern int yylineno;
 extern char *yytext;
 extern FILE *yyin;
+
+Scope* stack;
+SymbolTable* table;
 
 #define FILENAME "./outputs/output.c"
 #define PROGRAM_NAME "./outputs/program"
@@ -20,10 +25,11 @@ extern FILE *yyin;
 %union {
 	char * sValue; 
 	struct record * rec;
- };
+};
 
 
-%token <sValue> ID STRING_LITERAL INT DECIMAL CHAR_LITERAL
+
+%token <sValue> ID STRING_LITERAL INT FLOAT DOUBLE CHAR_LITERAL
 
 %token TYPE_INT TYPE_VOID CONST TYPE_CHAR TYPE_STRUCT TYPE_STRING TYPE_SHORT 
        TYPE_UNSIGNED_INT TYPE_FLOAT TYPE_DOUBLE TYPE_LONG IF ELSE WHILE RETURN MAIN TYPE_BOOL
@@ -51,15 +57,16 @@ extern FILE *yyin;
 
 %%
 
-//Salvar programa em arquivo aqui
 program: statement_list SEMICOLON {
             printf("program\n");
-            char * final = concat(
+            char * includes = concat(
                 "#include <stdio.h>\n", 
                 "#include <string.h>\n", 
+                "#include <math.h>\n", 
                 "#include \"./include/strings.h\"\n",
-                "#include \"./include/type-conversions.h\"\n", 
-                $1->code);
+                "#include \"./include/type-conversions.h\"\n");
+
+            char * final = concat(includes, $1->code, "", "", "");
             freeRecord($1);
             //salva código em arquivo
             saveCode(final, FILENAME);
@@ -67,13 +74,14 @@ program: statement_list SEMICOLON {
             const char *executable = PROGRAM_NAME;
             char command[256];
 
+            //printTable(table);
             //TODO melhorar isso aqui ao pegar os imports
-            snprintf(command, sizeof(command), "gcc %s ./outputs/include/strings.c ./outputs/include/type-conversions.c -o %s", FILENAME, PROGRAM_NAME);
+            snprintf(command, sizeof(command), "gcc %s ./outputs/include/strings.c ./outputs/include/type-conversions.c -lm -o %s", FILENAME, PROGRAM_NAME);
             printf("Compiling the code with the command: %s\n", command);
 
             int result = system(command);
             if (result == 0) {
-                printf("Code compiled succesfully! Executor generated: %s\n", executable);
+                printf("Code compiled succesfully! Executable generated: %s\n", executable);
             } else {
                 fprintf(stderr, "Error compiling the code. Verify the file '%s' for more details.\n", FILENAME);
             }
@@ -166,6 +174,10 @@ arithmetic_operator: PLUS {
                     printf("MODULO\n");
                     $$ = createRecord("%","operator");
                 }
+                | EXPONENT {
+                    printf("EXPONENT\n");
+                    $$ = createRecord("^","exponent");
+                }
                 ;
 
 statement: declaration {
@@ -186,77 +198,81 @@ statement: declaration {
             }
             | main {
                 $$ = createRecord($1->code,"main");
-                printf("main: %s\n", $1->code);
+                //printf("main: %s\n", $1->code);
                 freeRecord($1);
             }
             | if_statement {
-                printf("if_statement\n");
+                //printf("if_statement\n");
                 $$ = createRecord($1->code,"if_statement");
                 freeRecord($1);
             }
             | while_statement {
-                printf("while_statement\n");
+                //printf("while_statement\n");
                 $$ = createRecord($1->code,"while_statement");
                 freeRecord($1);
             }
             | for_statement {
-                printf("for_statement\n");
+                //printf("for_statement\n");
                 $$ = createRecord($1->code,"for_statement");
                 freeRecord($1);
             }
             | return_statement {
                 $$ = createRecord($1->code,"");
-                printf("return_statement: %s\n", $1->code);
+                //printf("return_statement: %s\n", $1->code);
                 freeRecord($1);
             }
             | block_statement {
                 $$ = createRecord($1->code,$1->opt1);
-                printf("block_statement 0: %s\n", $1->code);
+                //printf("block_statement 0: %s\n", $1->code);
                 freeRecord($1);
             }
             | function_declaration {
                 $$ = createRecord($1->code,"function_declaration");
-                printf("function_declaration 0: %s\n", $1->code);
+                //printf("function_declaration 0: %s\n", $1->code);
                 freeRecord($1);
             }
             | expression {
                 $$ = createRecord($1->code,$1->opt1);
-                printf("expression: %s\n", $1->code);
-                printf("expression 2 (opt): %s\n", $1->opt1);
+                //printf("expression: %s\n", $1->code);
+                //printf("expression 2 (opt): %s\n", $1->opt1);
                 freeRecord($1);
             }
             | SEMICOLON {
-                printf("SEMICOLON\n");
+                //printf("SEMICOLON\n");
                 $$ = createRecord("","semicolon");
             }
          ;
 
 term: STRING_LITERAL {
-        printf("STRING\n");
+        //printf("STRING\n");
         $$ = createRecord($1,"string");
     }
     | INT {
-        printf("INT\n");
+        //printf("INT\n");
         $$ = createRecord($1,"int");
     }
-    | DECIMAL  {
-        printf("DECIMAL\n");
-        $$ = createRecord($1,"decimal");
+    | FLOAT  {
+        //printf("FLOAT\n");
+        $$ = createRecord($1,"float");
+    }
+    | DOUBLE  {
+        //printf("DOUBLE\n");
+        $$ = createRecord($1,"double");
     }
     | TRUE {
-        printf("True\n"); 
+        //printf("True\n"); 
         $$ = createRecord("1","bool");
     }
     | FALSE {
-        printf("False\n"); 
+        //printf("False\n"); 
         $$ = createRecord("0","bool");
     }
     | CHAR_LITERAL {
-        printf("CHAR\n"); 
+        //printf("CHAR\n"); 
         $$ = createRecord($1,"char");
     }
     | ID  { 
-        printf("ID encontrado: %s\n", $1); 
+        //printf("ID encontrado: %s\n", $1); 
         $$ = createRecord($1,"id");
     }
     ;                
@@ -264,7 +280,16 @@ term: STRING_LITERAL {
 declaration: type ID {
                 printf("VAR Declaration\n");
 
+                //char* currentScope = top(scopeStack);
+
+                //TODO: checar aqui se a variável já foi declarada
+
+                //setKeyValue(&symbolTable, currentScope, $2, $1->code);
+
                 //TODO: lidar com a declaração de arrays
+                char* currentScope = top(stack);
+
+                setKeyValue(&table, currentScope, $2, $1->code);
 
                 if (strcmp($1->opt1, "type string") == 0) { 
 
@@ -287,12 +312,31 @@ declaration: type ID {
 initialization: type ID ASSIGN expression {
                 printf("VAR Initialization \n");
 
+                //char* currentScope = top(scopeStack);
+
+                //TODO: checar aqui se a variável já foi declarada
+
+                //printf("currentScope: %s\n", currentScope);
+                //printf("nome da variável: %s\n", $2);
+                //printf("tipo da variável: %s\n", $1->code);
+
+               // setKeyValue(&symbolTable, currentScope, $2, $1->code);
+
+
                 //TODO: lidar com declaração de arrays
 
                 char * code;
                 char * code2;
+                
+                // A informação aqui tem que vir de cima (definição da função)
+                // Por que a parte semântica da função so é evaluada depois que os stmts
+                // São evaluados. Então aqui o escopo atual não serve como 
+                //referencia verdadeira
+                char* currentScope = top(stack);
 
-                if (strcmp($1->opt1, "type string") == 0) { 
+                setKeyValue(&table, currentScope, $2, $1->code);
+
+                if (strcmp($1->code, "string") == 0) { 
                     //TODO: passar da expressão o tamanho da string
                     //TODO: definir o tamanho da string pela expressão
                     //TODO: é para gerar um erro aqui caso a expressão não seja uma string
@@ -302,7 +346,7 @@ initialization: type ID ASSIGN expression {
                     } else {
                         code = concat($1->code, " * ", $2, " = ", "");
                     }
-                    code2 = concat(code, $4->code, "", "","");
+                    code2 = concat(code, $4->code, "", "", "");
 
                 } else {
 
@@ -311,7 +355,6 @@ initialization: type ID ASSIGN expression {
                     } else {
                        code = concat($1->code," ",$2, " = ", $4->code);
                     }
-
                     code2 = concat(code, "", "", "", "");
                     $$ = createRecord(code2,"");
                 }
@@ -342,6 +385,12 @@ initialization: type ID ASSIGN expression {
 
 assignment: ID ASSIGN expression {
                 printf("Assignment\n");
+                
+                char* currentScope = top(stack);
+
+                char* type = getValue(table, currentScope, $1);
+
+                printf("THE TYPE IS: %s\n", type);
 
                 //Coloca a variável que vai receber o valor do input
                 if(strcmp($3->opt1, "input") == 0) {
@@ -361,12 +410,13 @@ assignment: ID ASSIGN expression {
 - Checar tipos para não permitir coisas como ++<string>
 */
 unary_expression: term {
-                    printf("codigo: %s\n", $1->code);
+                    //printf("codigo: %s\n", $1->code);
+
                     $$ = createRecord($1->code,$1->opt1);
                     freeRecord($1);
                 }                                    
                 | term INCREMENT {
-                    printf("term increment: %s\n", $1->code);
+                    //printf("term increment: %s\n", $1->code);
                   
                     char * code = concat($1->code, "++", "", "", "");
                     printf("codigo: %s\n", code);
@@ -376,10 +426,10 @@ unary_expression: term {
                     free(code);
                 }
                 | term DECREMENT {
-                    printf("term decrement: %s\n", $1->code);
+                    //printf("term decrement: %s\n", $1->code);
 
                     char * code = concat($1->code, "--", "", "", "");
-                    printf("codigo: %s\n", code);
+                    //printf("codigo: %s\n", code);
 
                     $$ = createRecord(code,$1->opt1);
                     freeRecord($1);
@@ -389,16 +439,51 @@ unary_expression: term {
 
 arithmetic_expression: unary_expression {
                         printf("unary_expression\n");
-                        $$ = createRecord($1->code,$1->opt1);
+
+                        $$ = createRecord($1->code, $1->opt1);
                         freeRecord($1);
                     }
                     | arithmetic_expression arithmetic_operator unary_expression {
 
-                        printf("AQUIIIIIIIIIII\n");
-                        printf("%s\n",$1->opt1);
-                        printf("%s\n",$3->opt1);
-                        
-                        if(strcmp($1->opt1, "string") == 0 && strcmp($3->opt1, "string") == 0) {
+                        //TODO: não permitir divisão entre inteiros. Tem que converter antes para float ou double
+                        //TODO: não permitir tipos diferentes
+
+                        printf("XXXXXXXXXXXXXXXXXXXXXXXx\n");
+                        printf("Type of the unary expression: %s\n", $3->opt1);
+                        printf("Code: %s\n", $3->code);
+
+                        char * type;
+
+                        if(strcmp($1->opt1, "id") == 0){
+                            printf("Era um id\n");
+                            char* currentScope = top(stack);
+                            type = getValue(table, currentScope, $3->code);
+                            
+                            printf("type recebido: %s\n", type);
+                        } else {
+                            type = $1->opt1;
+                        }
+
+                        printf("Type after checking ids expression: %s\n", type);
+
+                      
+                        if (strcmp(type, "float") == 0 && strcmp($2->code, "^") == 0) {
+
+                            char * code = concat("powf(", $1->code, ",", $3->code, ")");
+                            printf("arithmetic_expression (float pow): %s\n", code);
+
+                            $$ = createRecord(code,"float");
+                            free(code);
+
+                        } else if (strcmp(type, "double") == 0 && strcmp($2->code, "^")  == 0) {
+
+                            char * code = concat("pow(", $1->code, ",", $3->code, ")");
+                            printf("arithmetic_expression (double pow): %s\n", code);
+
+                            $$ = createRecord(code,$3->opt1);
+                            free(code);
+
+                        } else if(strcmp(type, "string") == 0 && strcmp($3->opt1, "string") == 0) {
 
                             // TODO: checar se o operador é soma. Do contrário gerar erro
                             // TODO: ver o que acontece quando algum dos lados for uma chamada de função ou id
@@ -407,12 +492,24 @@ arithmetic_expression: unary_expression {
                             $$ = createRecord(code,"string");
                             free(code);
 
+                        } else if(strcmp(type, "float") == 0 && strcmp($3->opt1, "float") == 0) {
+
+                            char * code = concat("(float)", $1->code, $2->code, $3->code, "");
+                            $$ = createRecord(code,"float");
+                            free(code);
+
+                        } else if(strcmp(type, "double") == 0 && strcmp($3->opt1, "double") == 0) {
+
+                            char * code = concat("(double)", $1->code, $2->code, $3->code, "");
+                            $$ = createRecord(code,"double");
+                            free(code);
                         } else {
+
                            
                             char * code = concat($1->code, $2->code, $3->code, "", "");
-                            printf("arithmetic_expression: %s\n", code);
+                            printf("arithmetic_expression 42: %s\n", code);
 
-                            $$ = createRecord(code,"");
+                            $$ = createRecord(code,$3->opt1);
                             free(code);
 
                         }
@@ -428,14 +525,14 @@ arithmetic_expression: unary_expression {
 
 relational_expression: arithmetic_expression {
                       
-                        $$ = createRecord($1->code,"");
+                        $$ = createRecord($1->code,$1->opt1);
                         printf("arithmetic_expression: %s\n", $1->code);
                         freeRecord($1);
                     }
                     | relational_expression relational_operator arithmetic_expression {
                         char * code = concat($1->code, $2->code, $3->code, "", "");
                         printf("relational_expression: %s\n", code);
-                        $$ = createRecord(code,"");
+                        $$ = createRecord(code,$3->opt1);
                         freeRecord($1);
                         freeRecord($2);
                         freeRecord($3);
@@ -444,14 +541,14 @@ relational_expression: arithmetic_expression {
                     ;
 
 boolean_expression: relational_expression {
-                        $$ = createRecord($1->code,"");
+                        $$ = createRecord($1->code, $1->opt1);
                         printf("relational_expression: %s\n", $1->code);
                         freeRecord($1);
                     }
                     | boolean_expression boolean_operator relational_expression {
                         char * code = concat($1->code, $2->code, $3->code, "", "");
                         printf("boolean_expression 1: %s\n", code);
-                        $$ = createRecord(code,"");
+                        $$ = createRecord(code,$3->opt1);
                         freeRecord($1);
                         freeRecord($2);
                         freeRecord($3);
@@ -460,7 +557,7 @@ boolean_expression: relational_expression {
                     | NOT boolean_expression {
                         char * code = concat("!", $2->code, "", "", "");
                         printf("boolean_expression 2: %s\n", code);
-                        $$ = createRecord(code,"");
+                        $$ = createRecord(code,$2->opt1);
                         freeRecord($2);
                         free(code);
                     }
@@ -468,17 +565,17 @@ boolean_expression: relational_expression {
 
 expression: PAREN_OPEN expression PAREN_CLOSE {
             $$ = createRecord($2->code, $2->opt1);
-            printf("expression 1: %s\n", $2->code);
+            //printf("expression 1: %s\n", $2->code);
             freeRecord($2);
         }
         | boolean_expression {
             $$ = createRecord($1->code,$1->opt1);
-            printf("boolean_expression 3: %s\n", $1->code);
+            //printf("boolean_expression 3: %s\n", $1->code);
             freeRecord($1);
         }
         | function_call {
-            printf("function_call\n");
-            printf("dado recebido aqui: %s\n", $1->opt1);
+            //printf("function_call\n");
+            //printf("dado recebido aqui: %s\n", $1->opt1);
             $$ = createRecord($1->code,$1->opt1);
             freeRecord($1);
         }
@@ -486,6 +583,8 @@ expression: PAREN_OPEN expression PAREN_CLOSE {
 
 main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement {
             printf("main\n");
+            push("main", &stack);
+
             char * code = concat($1->code, " main", "(int argc, char *argv[])\n", $5->code, "");
             $$ = createRecord(code,"");
             freeRecord($1);
@@ -609,35 +708,35 @@ for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for
 
 
 for_initializer: /* epsilon */  {
-                    printf("for_initializer\n");
+                    //printf("for_initializer\n");
                     $$ = createRecord("","for_initializer");
                 }    
                 | initialization {
-                    printf("for_initializer\n");
+                    //printf("for_initializer\n");
                     $$ = createRecord($1->code,$1->opt1);
                     freeRecord($1);
                 }
                 | assignment {
-                    printf("for_initializer\n");
+                    //printf("for_initializer\n");
                     $$ = createRecord($1->code,$1->opt1);
                     freeRecord($1);
                 }
                 ;    
 
 for_increment: ID INCREMENT {
-                printf("for_increment\n");
+                //printf("for_increment\n");
                 char * code = concat($1, "++", "", "", "");
                 $$ = createRecord(code,"");
                 free(code);
             }
             | ID DECREMENT {
-                printf("for_decrement\n");
+                //printf("for_decrement\n");
                 char * code = concat($1, "--", "", "", "");
                 $$ = createRecord(code,"");
                 free(code);
             }
             | assignment {
-                printf("for_assignment\n");
+                //printf("for_assignment\n");
                 $$ = createRecord($1->code,$1->opt1);
                 freeRecord($1);
             }
@@ -674,9 +773,9 @@ parameter_list_nonempty: type ID {
              
 function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement {
             printf("function_declaration\n");
-            char * code = concat($1->code, $2, "(", $4->code, ")");
-            char * code2 = concat(code, $6->code, "", "", "");
-            $$ = createRecord(code,"");
+            char * code = concat($1->code, " ", $2, "(", $4->code);
+            char * code2 = concat(code, ")", $6->code, "", "");
+            $$ = createRecord(code2,"");
             freeRecord($1);
             freeRecord($4);
             freeRecord($6);
@@ -688,24 +787,24 @@ function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statem
 
 
 argument_list: /* epsilon */  {
-                printf("argument_list\n");
+                //printf("argument_list\n");
                 $$ = createRecord("","argument_list_empty");
             }
             | argument_list_nonempty {
-                printf("argument_list\n");
+                //printf("argument_list\n");
                 $$ = createRecord($1->code,$1->opt1);
                 freeRecord($1);
             }
             ;
 
 argument_list_nonempty: term  {
-            printf("argument_list_nonempty\n");
+            //printf("argument_list_nonempty\n");
             $$ = createRecord($1->code,$1->opt1);
             freeRecord($1);
         }
         |term COMMA argument_list_nonempty {
             char * code = concat($1->code, ",", $3->code, "", "");
-            printf("argument_list_nonempty: %s\n", code);
+            //printf("argument_list_nonempty: %s\n", code);
             $$ = createRecord(code,"arguments");
             freeRecord($1);
             freeRecord($3);
@@ -714,31 +813,41 @@ argument_list_nonempty: term  {
 
 function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
         printf("function_call\n");
-
+        
         if(strcmp($1, "print") == 0) { 
 
+            char* currentScope = top(stack);
+            
+            char* type = getValue(table, currentScope, $3->code);
+
+            //TODO: se variável não existir, retornar um erro!
+
+            //printTable(table);
+
+            printf("THE CURRENT SCOPE IS %s\n", currentScope);
+            printf("THE TYPE IS: %s\n", type);
+
             char * code;
-            if(strcmp($3->opt1, "string") == 0){
-                code = concat("printf", "(", $3->code, "", ")");
-            } else if(strcmp($3->opt1, "int") == 0){
-                code = concat("printf", "(\"%d\", ", $3->code, "", ")");
-            } else if(strcmp($3->opt1, "decimal") == 0){
-                code = concat("printf", "(\"%f\", ", $3->code, "", ")");
-            } else if(strcmp($3->opt1, "char") == 0){
-                code = concat("printf", "(\"%c\", ", $3->code, "", ")");
+
+            if(strcmp($3->opt1, "id") == 0){
+                char * printType = getPrintType(type);
+                char * code0 = concat("printf", "(", "\"",printType,"\"");
+                code = concat(code0, ",", $3->code, ")", "");
+                free(code0);
             } else {
-                //Acredito que aqui que eu printo uma variável
-                //TODO: buscar na tabela de simbolos o tipo da variável para que eu possa printar de acordo
-                code = concat("printf", "(", $3->code, ")", "");
+                char * printType = getPrintType($3->opt1);
+                char * code0 = concat("printf", "(", "\"",printType,"\"");
+                code = concat(code0, ",", $3->code, ")", "");
+                free(code0);
             }
 
-            printf("function_call (achei print): %s\n", code);
+            //printf("function_call (achei print): %s\n", code);
             $$ = createRecord(code,"print");
             free(code);
 
         } else if(strcmp($1, "length") == 0){
             char * code = concat("strlen", "(", $3->code, "", ")");
-            printf("function_call (achei length): %s\n", code);
+            //printf("function_call (achei length): %s\n", code);
             $$ = createRecord(code,"length");
 
         } else if(strcmp($1, "readString") == 0){
@@ -770,14 +879,14 @@ function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
 block_statement: BLOCK_BEGIN statement_list SEMICOLON BLOCK_END {
        
         char * code = concat("{\n", $2->code, ";", "\n}", "");
-        printf("block_statement: %s\n", code);
+        //printf("block_statement: %s\n", code);
         $$ = createRecord(code,"");
         freeRecord($2);
     }
     ;
 
 return_statement: RETURN expression {
-        printf("return_statement\n");
+        //printf("return_statement\n");
         char * code = concat("return ", $2->code, "", "", ";");
         $$ = createRecord(code,"");
         freeRecord($2);
@@ -791,6 +900,7 @@ int yyerror(char *msg) {
     fprintf(stderr, "%d: %s at '%s'\n", yylineno, msg, yytext);
     return 0;
 }
+
 #define EXTENSION "elmr"
 
 char* get_extension(char* pointer, int len) {
@@ -807,6 +917,7 @@ char* get_extension(char* pointer, int len) {
 }
 
 int main(int argc, char *argv[]) { 
+
     if (argc != 2) {
         printf("Usage: %s <source file>\n", argv[0]);
         return 1;
@@ -836,6 +947,12 @@ int main(int argc, char *argv[]) {
         printf("Error: Cannot open file %s\n", input_file);
         return 1;
     }
+
+    stack = createScopeStack();
+    table = createSymbolTable();
+
+    // Global scope
+    push("global", &stack);
 
     yyparse();  
 
