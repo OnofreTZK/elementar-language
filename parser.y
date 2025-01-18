@@ -313,6 +313,27 @@ term: STRING_LITERAL {
         //free(escope);
         //free(type);
     }
+    | ID BRACKET_OPEN ID BRACKET_CLOSE {
+        //printf("ID encontrado: %s\n", $1); 
+
+        //TODO: checar se a variável é um array e que existe
+
+        //TODO: checar se o índice é um inteiro
+
+        char * escope = top(stack);
+        char * type = getValue(table, escope, $1);
+        char * castCode = getTypeCast(type);
+
+
+        char * code = concat(castCode, "getFromList(", $1, ",", $3);
+        char * code2 = concat(code, ")", "", "","");
+        $$ = createRecord(code2,"array");
+        free(code);
+        free(code2);
+        //free(castCode);
+        //free(escope);
+        //free(type);
+    }
     ;                
 
 declaration: type ID {
@@ -653,7 +674,7 @@ expression: PAREN_OPEN expression PAREN_CLOSE {
             freeRecord($1);
         }
         | BRACKET_OPEN BRACKET_CLOSE {
-            $$ = createRecord("createList(50, type )","array");
+            $$ = createRecord("createList(2, type )","array");
         }
         ;
 

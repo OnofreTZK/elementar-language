@@ -5,6 +5,10 @@ int main(){
     int valor2 = 1;
     addToList(teste, valor2);
     addToList(teste, valor1);
+    addToList(teste, valor1);
+    addToList(teste, valor1);
+    addToList(teste, valor1);
+    addToList(teste, valor1);
     int valor3 = 10;
     teste[1] = valor3;
     int output = teste[1];
@@ -12,9 +16,12 @@ int main(){
     print(output);
     print("\n");
 
-    string[] listaStrings = [];
-    addToList(listaStrings, "teste1");
-    string fromList = listaStrings[0];
-    print(fromList);
-    print("\n");
+    for (int i = 0; i < 6; i++) {
+        printf("Item ");
+        print(i);
+        print(": ");
+        int output2 = teste[i];
+        print(output2);
+        print("\n");
+    };
 };
