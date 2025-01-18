@@ -2,6 +2,19 @@ int main(){
 
     int[] teste = [];
     int valor1 = 12;
-    addToList(teste, 1);
+    int valor2 = 1;
+    addToList(teste, valor2);
     addToList(teste, valor1);
+    int valor3 = 10;
+    teste[1] = valor3;
+    int output = teste[1];
+    print("Valor recuperado da lista: ");
+    print(output);
+    print("\n");
+
+    string[] listaStrings = [];
+    addToList(listaStrings, "teste1");
+    string fromList = listaStrings[0];
+    print(fromList);
+    print("\n");
 };

@@ -294,6 +294,15 @@ term: STRING_LITERAL {
         //printf("ID encontrado: %s\n", $1); 
         $$ = createRecord($1,"id");
     }
+    | ID BRACKET_OPEN INT BRACKET_CLOSE {
+        //printf("ID encontrado: %s\n", $1); 
+
+        //TODO: checar se a variável é um array e que existe
+
+        char * code = concat("*(int*)getFromList(", $1, ",", $3, ")");
+        $$ = createRecord(code,"array");
+        free(code);
+    }
     ;                
 
 declaration: type ID {
@@ -420,6 +429,21 @@ assignment: ID ASSIGN expression {
                     free(code);
                 }
                 freeRecord($3);               
+            }
+            | ID BRACKET_OPEN INT BRACKET_CLOSE ASSIGN expression {
+                printf("ATRIBUIÇÃO DE LISTA\n");
+                char* currentScope = top(stack);
+
+                char* type = getValue(table, currentScope, $1);
+                //TODO: checar se o tipo da variável corresponde a um array e se a variável realmente existe
+
+                char * code = concat("setListIndex(", $1,",","&",$6->code);
+                char * code2 = concat(code,",",$3, ")", "");
+                $$ = createRecord(code2,"");
+
+                free(code);
+                free(code2);
+                freeRecord($6);
             }
             ;  
 

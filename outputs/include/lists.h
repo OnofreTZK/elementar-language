@@ -22,6 +22,7 @@ typedef struct {
 
 DynamicList* createList(size_t initial_capacity, DataType type);
 void addToList(DynamicList* list, void* value);
+void setListIndex(DynamicList* list, void* value, size_t index);
 void* getFromList(DynamicList* list, size_t index);
 void freeList(DynamicList* list);
 
