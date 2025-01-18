@@ -16,4 +16,6 @@ int is_compatible(const char *type1, const char *type2);
 
 uint64_t generateHash(const char*);
 
+char** stringToParameterList(char*);
+
 #endif

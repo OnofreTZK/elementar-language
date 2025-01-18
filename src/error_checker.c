@@ -4,7 +4,7 @@
 #include "../include/util.h"
 #include <string.h>
 
-extern SymbolTable *stable;
+extern SymbolTable *sTable;
 extern Scope *scope;
 extern char *filename; // Nome do arquivo sendo analisado
 
@@ -44,20 +44,19 @@ void add_symbol_to_scope(const char *name, const char *type, int line, int colum
         return;
     }
 
-    setKeyValue(&stable, (char *)current_scope, (char *)name, type);
+    setKeyValue(&sTable, (char *)current_scope, (char *)name, type);
 }
-
 
 // Verifica se um símbolo está no escopo atual
 int is_symbol_in_scope(const char *name) {
     const char *current_scope = top(scope);
-    return getValue(stable, (char *)current_scope, (char *)name) != NULL;
+    return getValue(sTable, (char *)current_scope, (char *)name) != NULL;
 }
 
 // Obtém o tipo de um símbolo no escopo atual
 const char *get_symbol_type_in_scope(const char *name) {
     const char *current_scope = top(scope);
-    return (const char *)getValue(stable, (char *)current_scope, (char *)name);
+    return (const char *)getValue(sTable, (char *)current_scope, (char *)name);
 }
 
 // Verifica erros de tipo em retorno de função
@@ -116,7 +115,7 @@ void check_undefined_variable(const char *name, int line, int column) {
         exit(1);
     }
 
-    if (!stable) {
+    if (!sTable) {
         report_error("Tabela de símbolos não inicializada.", line, column);
         exit(1);
     }
@@ -129,7 +128,7 @@ void check_undefined_variable(const char *name, int line, int column) {
     }
 
     // Verifica se a variável existe na tabela de símbolos
-    if (!getValue(stable, (char *)current_scope, (char *)name)) {
+    if (!getValue(sTable, (char *)current_scope, (char *)name)) {
         char msg[256];
         snprintf(msg, sizeof(msg), "Variável '%s' não declarada.", name);
         report_error(msg, line, column);

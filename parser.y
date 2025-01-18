@@ -20,8 +20,8 @@ extern char *yytext;
 extern FILE *yyin;
 
 Scope* scope;
-SymbolTable* stable;
-FunctionTable* ftable;
+SymbolTable* sTable;
+FunctionTable* fTable;
 const char *current_function_return_type;
 
 #define FILENAME "./outputs/output.c"
@@ -294,7 +294,7 @@ declaration: type ID {
                 add_symbol_to_scope($2, $1->code, yylineno, get_column());
 
                 // Insere a variável na tabela de símbolos
-                setKeyValue(&stable, currentScope, $2, $1->code);
+                setKeyValue(&sTable, currentScope, $2, $1->code);
 
                 // Lida com a declaração de strings e outros tipos
                 if (strcmp($1->opt1, "type string") == 0) { 
@@ -325,7 +325,7 @@ initialization: type ID ASSIGN expression {
                 check_assignment($2, $4->opt1, yylineno, get_column());
 
                 // Insere a variável na tabela de símbolos
-                setKeyValue(&stable, currentScope, $2, $1->code);
+                setKeyValue(&sTable, currentScope, $2, $1->code);
 
                 char *code;
 
@@ -354,7 +354,7 @@ assignment: ID ASSIGN expression {
                 if (!scope) {
                     report_error("Pilha de escopos não inicializada.", yylineno, get_column());
                     $$ = createRecord("", ""); // Retorna um registro vazio
-                } else if (!stable) {
+                } else if (!sTable) {
                     report_error("Tabela de símbolos não inicializada.", yylineno, get_column());
                     $$ = createRecord("", ""); // Retorna um registro vazio
                 } else {
@@ -369,12 +369,12 @@ assignment: ID ASSIGN expression {
                         // Verifica se a variável foi declarada antes de ser usada
                         check_undefined_variable($1, yylineno, get_column());
 
-                        if (!getValue(stable, currentScope, $1)) {
+                        if (!getValue(sTable, currentScope, $1)) {
                             // Caso a variável não seja encontrada, retorna um registro vazio
                             $$ = createRecord("", "");
                         } else {
                             // Obtém o tipo da variável no escopo atual
-                            char *type = getValue(stable, currentScope, $1);
+                            char *type = getValue(sTable, currentScope, $1);
 
                             printf("DEBUG: Variável '%s' encontrada com tipo '%s'.\n", $1, type);
 
@@ -447,7 +447,7 @@ arithmetic_expression: unary_expression {
                         // Verifica tipos de identificadores
                         if (strcmp(type_left, "id") == 0) {
                             char *currentScope = top(scope);
-                            type_left = getValue(stable, currentScope, $1->code);
+                            type_left = getValue(sTable, currentScope, $1->code);
                             if (!type_left) {
                                 check_undefined_variable($1->code, yylineno, get_column());
                                 $$ = createRecord("", ""); // Retorna um registro vazio em caso de erro
@@ -456,7 +456,7 @@ arithmetic_expression: unary_expression {
 
                         if (strcmp(type_right, "id") == 0) {
                             char *currentScope = top(scope);
-                            type_right = getValue(stable, currentScope, $3->code);
+                            type_right = getValue(sTable, currentScope, $3->code);
                             if (!type_right) {
                                 check_undefined_variable($3->code, yylineno, get_column());
                                 $$ = createRecord("", ""); // Retorna um registro vazio em caso de erro
@@ -788,9 +788,10 @@ function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statem
 
             char* currentScope = top(scope);
 
-            char* temporary[] = {"int", "string"};
+            printf("GOTHERE\n");
+            char** parameters = stringToParameterList($4->code);
 
-            setKeyFunction(&ftable, currentScope, $2, temporary, $1->code);
+            setKeyFunction(&fTable, currentScope, $2, parameters, $1->code);
 
             char * code = concat($1->code, " ", $2, "(", $4->code);
             char * code2 = concat(code, ")", $6->code, "", "");
@@ -835,14 +836,9 @@ function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
 
             char* currentScope = top(scope);
             
-            char* type = getValue(stable, currentScope, $3->code);
+            char* type = getValue(sTable, currentScope, $3->code);
 
             //TODO: se variável não existir, retornar um erro!
-
-            //printTable(table);
-
-            printf("THE CURRENT SCOPE IS %s\n", currentScope);
-            printf("THE TYPE IS: %s\n", type);
 
             char * code;
 
@@ -936,8 +932,8 @@ char* get_extension(char* pointer, int len) {
 int main(int argc, char *argv[]) { 
 
     scope = createScopeStack();
-    stable = createSymbolTable();
-    ftable = createFunctionTable();
+    sTable = createSymbolTable();
+    fTable = createFunctionTable();
 
     if (argc != 2) {
         printf("Usage: %s <source file>\n", argv[0]);
@@ -976,10 +972,9 @@ int main(int argc, char *argv[]) {
 
     yyparse();  
 
-
     destroyStack(&scope);
-    destroySymbolTable(&stable);
-    destroyFunctionTable(&ftable);
+    destroySymbolTable(&sTable);
+    destroyFunctionTable(&fTable);
 
     fclose(yyin);
     return 0;
