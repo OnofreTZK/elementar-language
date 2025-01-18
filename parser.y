@@ -63,21 +63,28 @@ program: statement_list SEMICOLON {
                 "#include <stdio.h>\n", 
                 "#include <string.h>\n", 
                 "#include <math.h>\n", 
-                "#include \"./include/strings.h\"\n",
-                "#include \"./include/type-conversions.h\"\n");
+                "#include \"./include/lists.h\"\n",
+                "#include <strings.h>\n"
+               );
 
-            char * final = concat(includes, $1->code, "", "", "");
+            char * includes2 = concat(includes, "#include \"./include/type-conversions.h\"\n", "", "", "");
+
+            char * final = concat(includes2, $1->code, "", "", "");
             freeRecord($1);
             //salva código em arquivo
             saveCode(final, FILENAME);
 
             const char *executable = PROGRAM_NAME;
-            char command[256];
+            char command[512];
 
             //printTable(table);
             //TODO melhorar isso aqui ao pegar os imports
-            snprintf(command, sizeof(command), "gcc %s ./outputs/include/strings.c ./outputs/include/type-conversions.c -lm -o %s", FILENAME, PROGRAM_NAME);
-            printf("Compiling the code with the command: %s\n", command);
+
+            char * commands = concat("gcc ", FILENAME, " ./outputs/include/strings.c", " ./outputs/include/lists.c", " ./outputs/include/type-conversions.c");
+            char * commands2 = concat(commands, " -lm -o ", PROGRAM_NAME, "","");
+
+            snprintf(command, sizeof(command), "%s", commands2);
+            printf("Compiling the code with the command: %s\n",commands2);
 
             int result = system(command);
             if (result == 0) {
@@ -87,6 +94,10 @@ program: statement_list SEMICOLON {
             }
 
             free(final);
+            free(includes);
+            free(includes2);
+            free(commands);
+            free(commands2);
         }
         ;
 
@@ -575,6 +586,9 @@ expression: PAREN_OPEN expression PAREN_CLOSE {
             //printf("dado recebido aqui: %s\n", $1->opt1);
             $$ = createRecord($1->code,$1->opt1);
             freeRecord($1);
+        }
+        | BRACKET_OPEN BRACKET_CLOSE {
+            $$ = createRecord("[]","array");
         }
         ;
 
