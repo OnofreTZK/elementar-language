@@ -89,7 +89,6 @@ void* getValue(SymbolTable* table, char* scope, char* id) {
     uint64_t keyhash = generateHash(prehash);
     unsigned int index = (unsigned int)(keyhash & (uint64_t)(table->capacity - 1));
 
-
     while (table->symbols[index].key != NULL) {
         if (strcmp(prehash, table->symbols[index].key) == 0) {
             return table->symbols[index].value;
