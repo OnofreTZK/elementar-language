@@ -4,6 +4,11 @@
 
 static int label_counter = 0;
 
+int is_compatible(const char *type1, const char *type2) {
+    return strcmp(type1, type2) == 0; // Verifica se os tipos são iguais
+}
+
+
 char * concat(char * s1, char * s2, char * s3, char * s4, char * s5){
   int tam;
   char * output;
