@@ -12,65 +12,71 @@ int main() {
     int colunasB = readInt();
 
     // Declaração das matrizes
-    int[][] A = newMatrix(linhasA, colunasA);
-    int[][] B = newMatrix(linhasB, colunasB);
 
+    list[] matrizA = [];
+    list[] matrizB = [];
+
+   
     // Leitura da matriz A
     print("Digite os elementos da matriz A:\n");
     for (int i = 0; i < linhasA; i++) {
+        int[] linhas = [];
         for (int j = 0; j < colunasA; j++) {
-            A[i][j] = readInt();
+            int value = readInt();
+            addToList(linhas, value);
         };
+        addToList(matrizA, linhas);
     };
 
     // Leitura da matriz B
-    print("Digite os elementos da matriz B:\n");
-    for (int i = 0; i < linhasB; i++) {
-        for (int j = 0; j < colunasB; j++) {
-            B[i][j] = readInt();
+    print("Digite os elementos da matriz A:\n");
+    for (int k = 0; k < linhasB; k++) {
+        int[] linhas = [];
+        for (int l = 0; l < colunasB; l++) {
+            int value = readInt();
+            addToList(linhas, value);
         };
+        addToList(matrizB, linhas);
     };
 
-    // Soma das matrizes
     if (linhasA =? linhasB && colunasA =? colunasB) {
-        int[][] soma = newMatrix(linhasA, colunasA);
-        for (int i = 0; i < linhasA; i++) {
-            for (int j = 0; j < colunasA; j++) {
-                soma[i][j] = A[i][j] + B[i][j];
+
+        list[] soma = [];
+
+        for (int i2 = 0; i2 < linhasA; i2++) {
+
+            int[] linhaMatrizA = matrizA[i2];
+            int[] linhaMatrizB = matrizB[i2];
+            int[] somaLinha = [];
+
+            for (int j2 = 0; j2 < colunasA; j2++) {
+                int value1 = linhaMatrizA[j2];
+                int value2 = linhaMatrizB[j2];
+                int somaMatriz = value1 + value2;
+                addToList(somaLinha, somaMatriz);
             };
+
+            addToList(soma, somaLinha);
         };
 
+
         print("Soma das matrizes:\n");
-        for (int i = 0; i < linhasA; i++) {
-            for (int j = 0; j < colunasA; j++) {
-                print(soma[i][j] + " ");
+        for (int i3 = 0; i3 < linhasA; i3++) {
+
+            int[] linha = soma[i3];
+
+            for (int j3 = 0; j3 < colunasA; j3++) {
+                int value = linha[j3];
+                print(value);
+                print(" ");
             };
             print("\n");
         };
+
+       
     } else {
         print("Soma das matrizes não é possível (dimensões diferentes).\n");
     };
 
-    // Multiplicação das matrizes
-    if (colunasA =? linhasB) {
-        int[][] produto = newMatrix(linhasA, colunasB);
-        for (int i = 0; i < linhasA; i++) {
-            for (int j = 0; j < colunasB; j++) {
-                produto[i][j] = 0;
-                for (int k = 0; k < colunasA; k++) {
-                    produto[i][j] = produto[i][j] + (A[i][k] * B[k][j]);
-                };
-            };
-        };
-
-        print("Produto das matrizes:\n");
-        for (int i = 0; i < linhasA; i++) {
-            for (int j = 0; j < colunasB; j++) {
-                print(produto[i][j] + " ");
-            };
-            print("\n");
-        };
-    } else {
-        print("Multiplicação das matrizes não é possível (dimensões incompatíveis).\n");
-    };
+  
 };
