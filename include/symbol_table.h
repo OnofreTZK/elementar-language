@@ -11,10 +11,8 @@ void setKeyValue(SymbolTable**, char*, char*, const char*);
 
 void* getValue(SymbolTable*, char*, char*);
 
-unsigned int length(SymbolTable*);
+void printSymbolTable(SymbolTable*);
 
-void printTable(SymbolTable*);
-
-void destroyTable(SymbolTable**);
+void destroySymbolTable(SymbolTable**);
 
 #endif

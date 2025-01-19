@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdint.h>
+
+#define FNV_OFFSET 14695981039346656037UL
+#define FNV_PRIME 1099511628211UL
 
 static int label_counter = 0;
 
@@ -168,4 +172,66 @@ int isIdentifier(const char *str) {
     }
 
     return 1; // É um identificador válido
+}
+
+// No proprietary code
+// Source: https://benhoyt.com/writings/hash-table-in-c/
+uint64_t generateHash(const char* key) {
+    uint64_t hash = FNV_OFFSET;
+    for (const char* p = key; *p; p++) {
+        hash ^= (uint64_t)(unsigned char)(*p);
+        hash *= FNV_PRIME;
+    }
+    return hash;
+}
+
+char** stringToParameterList(char* paramList) {
+    size_t maxTypes = 100;
+    char** types = malloc(maxTypes * sizeof(char*));
+    if (!types) {
+        perror("malloc failed");
+        return NULL;
+    }
+
+    size_t typeCount = 0;
+
+    char* inputCopy = strdup(paramList);
+    if (!inputCopy) {
+        perror("strdup failed");
+        free(types);
+        return NULL;
+    }
+
+    char* token = strtok(inputCopy, ",");
+    while (token) {
+        while (*token == ' ') token++; // Remove leading spaces
+        char* end = token + strlen(token) - 1;
+        while (end > token && (*end == ' ' || *end == '\n' || *end == '\r')) {
+            *end = '\0'; // Remove trailing spaces
+            end--;
+        }
+
+        char* spacePos = strchr(token, ' ');
+        if (spacePos) {
+            *spacePos = '\0'; // Null-terminate to separate type from id
+        }
+
+        types[typeCount++] = strdup(token);
+        if (typeCount >= maxTypes) {
+            maxTypes *= 2;
+            types = realloc(types, maxTypes * sizeof(char*));
+            if (!types) {
+                perror("realloc failed");
+                free(inputCopy);
+                return NULL;
+            }
+        }
+
+        token = strtok(NULL, ",");
+    }
+
+    types[typeCount] = NULL;
+
+    free(inputCopy);
+    return types;
 }

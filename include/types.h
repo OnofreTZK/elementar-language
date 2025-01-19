@@ -18,4 +18,16 @@ typedef struct _SymbolTable {
   unsigned int length;
 } SymbolTable ;
 
+typedef struct _Function {
+  const char* key;
+  char** parameters;
+  char* type;
+} Function ;
+
+typedef struct _FunctionTable {
+  Function* functions;
+  unsigned int capacity;
+  unsigned int length;
+} FunctionTable ;
+
 #endif
