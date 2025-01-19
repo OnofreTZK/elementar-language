@@ -1,5 +1,6 @@
-.DEFAULT_GOAL := help
+DEFAULT_GOAL := help
 SHELL := /usr/bin/env bash
+TESTSRC := $(filter-out src/error_checker.c, $(wildcard src/*.c))
 
 help:
 	@echo "$$(tput bold)Commands:$$(tput sgr0)";echo;
@@ -15,7 +16,7 @@ clear_files:
 	@rm -rf lex.yy.c y.gv y.output y.tab.c y.tab.h compiler
 
 build_tests:
-	@gcc -Iinclude src/* test/* -o runner
+	@gcc -Iinclude $(TESTSRC) test/* -o runner
 
 clean_tests:
 	@rm -rf runner
