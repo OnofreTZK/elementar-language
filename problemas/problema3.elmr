@@ -31,12 +31,12 @@ int main() {
     // Leitura da matriz B
     print("Digite os elementos da matriz A:\n");
     for (int k = 0; k < linhasB; k++) {
-        int[] linhas = [];
+        int[] linhas2 = [];
         for (int l = 0; l < colunasB; l++) {
-            int value = readInt();
-            addToList(linhas, value);
+            int value2 = readInt();
+            addToList(linhas2, value2);
         };
-        addToList(matrizB, linhas);
+        addToList(matrizB, linhas2);
     };
 
     if (linhasA =? linhasB && colunasA =? colunasB) {
@@ -50,9 +50,9 @@ int main() {
             int[] somaLinha = [];
 
             for (int j2 = 0; j2 < colunasA; j2++) {
-                int value1 = linhaMatrizA[j2];
-                int value2 = linhaMatrizB[j2];
-                int somaMatriz = value1 + value2;
+                int valueX = linhaMatrizA[j2];
+                int valueY = linhaMatrizB[j2];
+                int somaMatriz = valueX + valueY;
                 addToList(somaLinha, somaMatriz);
             };
 
@@ -63,11 +63,11 @@ int main() {
         print("Soma das matrizes:\n");
         for (int i3 = 0; i3 < linhasA; i3++) {
 
-            int[] linha = soma[i3];
+            int[] linha3 = soma[i3];
 
             for (int j3 = 0; j3 < colunasA; j3++) {
-                int value = linha[j3];
-                print(value);
+                int value3 = linha3[j3];
+                print(value3);
                 print(" ");
             };
             print("\n");

@@ -52,12 +52,14 @@ char * pop(Scope** stack) {
 } 
 
 char* top(Scope* stack){
-	if(!stack){
-		return "";
-	} 
-	
-	return stack->label;
+    if(!stack){
+        printf("DEBUG: Pilha de escopos vazia.\n");
+        return "";
+    } 
+    printf("DEBUG: Escopo atual: %s\n", stack->label);
+    return stack->label;
 }
+
 
 char* peek(Scope* stack, int position) {
 	char* label = NULL;

@@ -7,10 +7,16 @@
 #include "file_save.h"
 #include "scope_stack.h"
 #include "symbol_table.h"
+#include "error_checker.h"
 
 int yylex(void);
 int yyerror(char *s);
 extern int yylineno;
+extern char *yytext;
+extern FILE *yyin;
+char *filename = NULL;
+extern int yycolumn;
+extern int get_column();
 extern char *yytext;
 extern FILE *yyin;
 
@@ -333,48 +339,50 @@ term: STRING_LITERAL {
     ;                
 
 declaration: type ID {
-                printf("VAR Declaration\n");
+    printf("VAR Declaration\n");
 
-                //TODO: checar aqui se a variável já foi declarada
+    // Checa se a variável já foi declarada no escopo atual
+    check_variable_declaration($2, yylineno, yycolumn);
 
-                char* currentScope = top(stack);
-                char * variableType;
+    char* variableType;
 
-                if(strcmp($1->code, "DynamicList* ") == 0) {
-                    printf("É uma lista\n");
-                    printf("%s\n", $1->code);
-                    variableType = concat($1->opt1, "", "", "","");
-                } else {
-                    printf("Não é uma lista\n");
-                    printf("%s\n", $1->code);
-                    variableType = concat($1->code, "", "", "","");
-                }
+    // Determina o tipo da variável
+    if (strcmp($1->code, "DynamicList* ") == 0) {
+        printf("É uma lista\n");
+        printf("%s\n", $1->code);
+        variableType = concat($1->opt1, "", "", "", "");
+    } else {
+        printf("Não é uma lista\n");
+        printf("%s\n", $1->code);
+        variableType = concat($1->code, "", "", "", "");
+    }
 
-                setKeyValue(&table, currentScope, $2, variableType);
+    // Adiciona a variável à tabela de símbolos
+    setKeyValue(&table, top(stack), $2, variableType);
+    free(variableType);
 
-                free(variableType);
+    // Geração de código
+    if (strcmp($1->opt1, "type string") == 0) { 
+        char* code = concat($1->code, " * ", $2, "", "");
+        printf("declaration: %s\n", code);
+        $$ = createRecord(code, "");
+        free(code);
+    } else {
+        char* code = concat($1->code, " ", $2, "", "");
+        $$ = createRecord(code, "");
+        free(code);
+    }
 
-                if (strcmp($1->opt1, "type string") == 0) { 
+    freeRecord($1);
+}
+;
 
-                    char * code = concat($1->code, " * ", $2,"", "");
-
-                    printf("declaration: %s\n", code);
-
-                    $$ = createRecord(code,"");
-                    free(code);
-                } else {
-                    char * code = concat($1->code, " ", $2, "", "");
-                    $$ = createRecord(code,"");
-                    free(code);
-                }
-
-                freeRecord($1);
-            }
-            ;  
 
 initialization: type ID ASSIGN expression {
                 printf("VAR Initialization \n");
                 //TODO: checar aqui se a variável já foi declarada
+                check_variable_declaration($2, yylineno, yycolumn);
+
                 //TODO: lidar com declaração de arrays
 
                 char * code;
@@ -393,10 +401,13 @@ initialization: type ID ASSIGN expression {
                     variableType = concat($1->code, "", "", "","");
                 }
 
+                // Adiciona o símbolo à tabela
                 setKeyValue(&table, currentScope, $2, variableType);
                 free(variableType);
 
                 if(strcmp($4->opt1, "array") == 0) {
+                    // Verifica a inicialização de array
+                    check_array_initialization($2, $1->code, $4->opt1, yylineno, yycolumn);
 
                     char * dataType = getTypeValue($1->opt1);
                     char * listReplaced = strdup(replace($4->code, "type", dataType));
@@ -409,15 +420,19 @@ initialization: type ID ASSIGN expression {
                     //TODO: passar da expressão o tamanho da string
                     //TODO: definir o tamanho da string pela expressão
                     //TODO: é para gerar um erro aqui caso a expressão não seja uma string
-
-                    if(strcmp($4->opt1, "input") == 0){ //Faz a alocação para a string
+                    if(strcmp($4->opt1, "input") == 0){ // Faz a alocação para a string
                         code = concat($1->code, " * ", $2, " = (char *)malloc(100 * sizeof(char));\n", "");
                     } else {
+                        // Verifica compatibilidade de tipo string
+                        check_assignment($2, $4->opt1, yylineno, yycolumn);
+
                         code = concat($1->code, " * ", $2, " = ", "");
                     }
                     code2 = concat(code, $4->code, "", "", "");
 
                 } else {
+                    // Verifica compatibilidade de tipos para inicializações não-string
+                    check_assignment($2, $4->opt1, yylineno, yycolumn);
 
                     if(strcmp($4->opt1, "input") == 0){ 
                         code = concat($1->code," ",$2, ";\n ", $4->code);
@@ -450,7 +465,8 @@ initialization: type ID ASSIGN expression {
                 freeRecord($1);
                 freeRecord($4);
             }
-            ;  
+            ;
+
 
 assignment: ID ASSIGN expression {
                 printf("Assignment\n");
@@ -765,7 +781,6 @@ while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement {
 }
 ;
 
-
 for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for_increment PAREN_CLOSE block_statement {
     printf("for_statement\n");
 
@@ -1078,6 +1093,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    // Inicializa a variável global filename
+    filename = input_file;
+
     stack = createScopeStack();
     table = createSymbolTable();
 
@@ -1089,3 +1107,4 @@ int main(int argc, char *argv[]) {
     fclose(yyin);
     return 0;
 }
+
