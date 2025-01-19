@@ -114,6 +114,7 @@ void add_symbol_to_scope(const char *name, const char *type, int line, int colum
         return;
     }
 
+
     setKeyValue(&table, (char *)current_scope, (char *)name, type);
 }
 
@@ -194,6 +195,7 @@ void check_undefined_variable(const char *name, int line, int column) {
         exit(1);
     }
 
+
     if (!table) {
         report_error("Tabela de símbolos não inicializada.", line, column);
         exit(1);
@@ -252,4 +254,3 @@ void exit_scope() {
     printf("DEBUG: Saindo do escopo '%s'.\n", scope_name);
     pop(&stack);
 }
-

@@ -11,7 +11,10 @@
 
 int yylex(void);
 int yyerror(char *s);
+char *filename = NULL;
 extern int yylineno;
+extern int yycolumn;
+extern int get_column();
 extern char *yytext;
 extern FILE *yyin;
 char *filename = NULL;
@@ -20,8 +23,9 @@ extern int get_column();
 extern char *yytext;
 extern FILE *yyin;
 
-Scope* stack;
-SymbolTable* table;
+Scope* scope_stack;
+SymbolTable* symbol_table;
+const char *current_function_return_type;
 
 #define FILENAME "./outputs/output.c"
 #define PROGRAM_NAME "./outputs/program"
@@ -433,62 +437,67 @@ initialization: type ID ASSIGN expression {
                 } else {
                     // Verifica compatibilidade de tipos para inicializações não-string
                     check_assignment($2, $4->opt1, yylineno, yycolumn);
-
-                    if(strcmp($4->opt1, "input") == 0){ 
-                        code = concat($1->code," ",$2, ";\n ", $4->code);
-                    } else {
-                       code = concat($1->code," ",$2, " = ", $4->code);
-                    }
-                    code2 = concat(code, "", "", "", "");
-                    $$ = createRecord(code2,"");
                 }
 
-                if(strcmp($4->opt1, "input") == 0) {
+                char *code;
 
-                    char * code3;
-                    if (strcmp($1->opt1, "type string") == 0){
-                        code3 = concat(code2, $2, ")", "", "");
-                    } else {
-                        code3 = concat(code2, "&",$2, ")", "");
-                    }
-                    $$ = createRecord(code3,"");
-                    free(code3);
-
+                if (strcmp($1->code, "string") == 0) { 
+                    code = concat($1->code, " * ", $2, " = ", $4->code); // Strings precisam de alocação especial
                 } else {
-                    $$ = createRecord(code2,"");
+                    code = concat($1->code, " ", $2, " = ", $4->code); // Demais tipos
                 }
+
 
                 printf("initialization: %s\n", code2);
                 
                 //free(code);
                 free(code2);
+
                 freeRecord($1);
                 freeRecord($4);
             }
             ;
 
-
 assignment: ID ASSIGN expression {
-                printf("Assignment\n");
-                
-                char* currentScope = top(stack);
+                printf("DEBUG: Iniciando assignment para '%s'.\n", $1);
 
-                char* type = getValue(table, currentScope, $1);
+                if (!scope_stack) {
+                    report_error("Pilha de escopos não inicializada.", yylineno, get_column());
+                    $$ = createRecord("", ""); // Retorna um registro vazio
+                } else if (!symbol_table) {
+                    report_error("Tabela de símbolos não inicializada.", yylineno, get_column());
+                    $$ = createRecord("", ""); // Retorna um registro vazio
+                } else {
+                    char *currentScope = top(scope_stack);
 
-                printf("THE TYPE IS: %s\n", type);
+                    if (!currentScope) {
+                        report_error("Escopo atual não encontrado.", yylineno, get_column());
+                        $$ = createRecord("", ""); // Retorna um registro vazio
+                    } else {
+                        printf("DEBUG: Escopo atual: '%s'. Verificando variável '%s'.\n", currentScope, $1);
 
-                //Coloca a variável que vai receber o valor do input
-                if(strcmp($3->opt1, "input") == 0) {
-                    char * code = concat($1, "=", $3->code,$1, ")");
-                    free(code);
+                        // Verifica se a variável foi declarada antes de ser usada
+                        check_undefined_variable($1, yylineno, get_column());
+
+                        if (!getValue(symbol_table, currentScope, $1)) {
+                            // Caso a variável não seja encontrada, retorna um registro vazio
+                            $$ = createRecord("", "");
+                        } else {
+                            // Obtém o tipo da variável no escopo atual
+                            char *type = getValue(symbol_table, currentScope, $1);
+
+                            printf("DEBUG: Variável '%s' encontrada com tipo '%s'.\n", $1, type);
 
                 }  else {
                     char * code = concat($1, "=", $3->code, "", "");
                     $$ = createRecord(code,"");
                     free(code);
+
                 }
-                freeRecord($3);               
+
+                freeRecord($3);
             }
+
             | ID BRACKET_OPEN INT BRACKET_CLOSE ASSIGN expression {
                 printf("ATRIBUIÇÃO DE LISTA\n");
                 char* currentScope = top(stack);
@@ -506,36 +515,39 @@ assignment: ID ASSIGN expression {
             }
             ;  
 
-/* 
-- Checar tipos para não permitir coisas como ++<string>
-*/
+
 unary_expression: term {
-                    //printf("codigo: %s\n", $1->code);
-
-                    $$ = createRecord($1->code,$1->opt1);
+                    $$ = createRecord($1->code, $1->opt1);
                     freeRecord($1);
-                }                                    
+                }
                 | term INCREMENT {
-                    //printf("term increment: %s\n", $1->code);
-                  
-                    char * code = concat($1->code, "++", "", "", "");
-                    printf("codigo: %s\n", code);
+                    printf("DEBUG: Aplicando incremento em '%s' do tipo '%s'.\n", $1->code, $1->opt1);
 
-                    $$ = createRecord(code,$1->opt1);
+                    // Verifica se o tipo é compatível para incremento
+                    check_increment($1->opt1, yylineno, get_column());
+
+                    char *code = concat($1->code, "++", "", "", "");
+                    printf("DEBUG: Código gerado: %s\n", code);
+
+                    $$ = createRecord(code, $1->opt1);
                     freeRecord($1);
                     free(code);
                 }
                 | term DECREMENT {
-                    //printf("term decrement: %s\n", $1->code);
+                    printf("DEBUG: Aplicando decremento em '%s' do tipo '%s'.\n", $1->code, $1->opt1);
 
-                    char * code = concat($1->code, "--", "", "", "");
-                    //printf("codigo: %s\n", code);
+                    // Verifica se o tipo é compatível para decremento
+                    check_increment($1->opt1, yylineno, get_column());
 
-                    $$ = createRecord(code,$1->opt1);
+                    char *code = concat($1->code, "--", "", "", "");
+                    printf("DEBUG: Código gerado: %s\n", code);
+
+                    $$ = createRecord(code, $1->opt1);
                     freeRecord($1);
                     free(code);
                 }
                 ;
+
 
 arithmetic_expression: unary_expression {
                         printf("unary_expression\n");
@@ -545,8 +557,8 @@ arithmetic_expression: unary_expression {
                     }
                     | arithmetic_expression arithmetic_operator unary_expression {
 
-                        //TODO: não permitir divisão entre inteiros. Tem que converter antes para float ou double
-                        //TODO: não permitir tipos diferentes
+                        //TODO: não permitir divisão entre inteiros, o usuário deveria converter para float ou double antes disso
+                        //TODO: não permitir operações entre tipos diferentes
 
                         printf("XXXXXXXXXXXXXXXXXXXXXXXx\n");
                         printf("Type of the unary expression: %s\n", $3->opt1);
@@ -556,8 +568,8 @@ arithmetic_expression: unary_expression {
 
                         if(strcmp($1->opt1, "id") == 0){
                             printf("Era um id\n");
-                            char* currentScope = top(stack);
-                            type = getValue(table, currentScope, $3->code);
+                            char* currentScope = top(scope_stack);
+                            type = getValue(symbol_table, currentScope, $3->code);
                             
                             printf("type recebido: %s\n", type);
                         } else {
@@ -623,6 +635,7 @@ arithmetic_expression: unary_expression {
                     }
                     ;
 
+
 relational_expression: arithmetic_expression {
                       
                         $$ = createRecord($1->code,$1->opt1);
@@ -686,7 +699,7 @@ expression: PAREN_OPEN expression PAREN_CLOSE {
 
 main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement {
             printf("main\n");
-            push("main", &stack);
+            push("main", &scope_stack);
 
             char * code = concat($1->code, " main", "(int argc, char *argv[])\n", $5->code, "");
             $$ = createRecord(code,"");
@@ -924,9 +937,9 @@ function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
         
         if(strcmp($1, "print") == 0) { 
 
-            char* currentScope = top(stack);
+            char* currentScope = top(scope_stack);
             
-            char* type = getValue(table, currentScope, $3->code);
+            char* type = getValue(symbol_table, currentScope, $3->code);
 
             //TODO: se variável não existir, retornar um erro!
 
@@ -1021,6 +1034,7 @@ function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
     }
     ;
 
+
 block_statement: BLOCK_BEGIN statement_list SEMICOLON BLOCK_END {
        
         char * code = concat("{\n", $2->code, ";", "\n}", "");
@@ -1063,14 +1077,20 @@ char* get_extension(char* pointer, int len) {
 
 int main(int argc, char *argv[]) { 
 
+    scope_stack = createScopeStack();
+    symbol_table = createSymbolTable();
+
+    // Verifica se o número de argumentos está correto
     if (argc != 2) {
         printf("Usage: %s <source file>\n", argv[0]);
         return 1;
     }
 
+    // Nome do arquivo de entrada
     char* input_file = argv[1]; 
     char* ext_pointer = strrchr(input_file, '.');
 
+    // Verifica se o arquivo possui extensão válida
     if (!ext_pointer) {
         printf("Invalid source file!\n");
         return 1;
@@ -1087,6 +1107,7 @@ int main(int argc, char *argv[]) {
 
     free(ext);
 
+    // Abre o arquivo de entrada
     yyin = fopen(input_file, "r");
     if (!yyin) {
         printf("Error: Cannot open file %s\n", input_file);
@@ -1099,10 +1120,16 @@ int main(int argc, char *argv[]) {
     stack = createScopeStack();
     table = createSymbolTable();
 
-    // Global scope
-    push("global", &stack);
 
+    // Inicia o escopo global
+    push("global", &scope_stack);
+
+    // Inicia o parsing
     yyparse();  
+
+    // Libera recursos
+    destroyStack(&scope_stack);
+    destroyTable(&symbol_table);
 
     fclose(yyin);
     return 0;

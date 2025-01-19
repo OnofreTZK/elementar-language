@@ -1,0 +1,9 @@
+int main() {
+    int x = 5;
+    float y = 3.14;
+    string z = "hello";
+	
+    int v = 2 / 2;	
+    int a = x / y;      // OK
+    int b = x / 2;      // Erro: divisão entre inteiros
+};

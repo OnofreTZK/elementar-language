@@ -11,6 +11,7 @@
 %}
 
 %%
+
 [\n]                    { yylineno++; yycolumn = 1; }  
 [ \t]+                  { yycolumn += yyleng; }                              
 "//".*                  { /* Comentário de linha ignorado */ }
@@ -99,6 +100,7 @@ main                    { yycolumn += yyleng; return(MAIN); }
                         }      
 .                       { 
                           fprintf(stderr, "%s:%d:%d: Erro: caractere inválido '%s'\n", 
+
                                   filename, yylineno, yycolumn, yytext); 
                           yycolumn += yyleng; 
                           return -1; 
@@ -108,7 +110,7 @@ main                    { yycolumn += yyleng; return(MAIN); }
 
 #ifndef yywrap
 int yywrap(void) { return 1; }
-#endif
+
 
 int get_column() {
     return yycolumn;
