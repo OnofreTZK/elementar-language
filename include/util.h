@@ -11,8 +11,9 @@ char *generateLabel(const char *prefix);
 char *getPrintType(char * variableType);
 char *replace(char *str, char *old_str, char *new_str);
 char *getTypeValue(char * type);
-char* getSecondElement(const char* str);
+char *getSecondElement(const char* str);
 int isIdentifier(const char *str);
-char * getTypeCast(char * type);
+char *getTypeCast(char * type);
+int isListType(char* type);
 
 #endif

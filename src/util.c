@@ -85,7 +85,7 @@ char *replace(char *str, char *old_str, char *new_str) {
     return result;
 }
 
-char * getTypeValue(char * type){
+char* getTypeValue(char* type) {
   if (strcmp(type, "int[]") == 0){
     return "INT_TYPE";
   } else if (strcmp(type, "float[]") == 0){
@@ -96,25 +96,36 @@ char * getTypeValue(char * type){
     return "DOUBLE_TYPE";
   } else if (strcmp(type, "bool[]") == 0){
     return "BOOL_TYPE";
+  } else if (strcmp(type, "list[]") == 0){
+    return "LIST_TYPE"; 
+  } else {
+      return "";
+  }
+}
+
+char* getTypeCast(char* type) {
+  if (strcmp(type, "int[]") == 0){
+    return "*(int*)";
+  } else if (strcmp(type, "float[]") == 0){
+    return "*(float*)";
+  } else if (strcmp(type, "string[]") == 0){
+    return "*(char*)";
+  } else if (strcmp(type, "double[]") == 0){
+    return "*(double*)";
+  } else if (strcmp(type, "bool[]") == 0){
+    return "*(short int*)";
+  } else if (strcmp(type, "list[]") == 0){
+    return "(DynamicList*)"; 
   } else {
     return "";
   }
 }
 
-char * getTypeCast(char * type){
-  if (strcmp(type, "int[]") == 0){
-    return "*(int*)";
-  } else if (strcmp(type, "float[]") == 0){
-    return  "*(float*)";
-  } else if (strcmp(type, "string[]") == 0){
-    return "*(char*)" ;
-  } else if (strcmp(type, "double[]") == 0){
-    return "*(double*)";
-  } else if (strcmp(type, "bool[]") == 0){
-    return "*(short int*)";
-  } else {
-    return "";
+int isListType(char* type) {
+  if (strchr(type, '[') != NULL || strchr(type, ']') != NULL) {
+    return 1;
   }
+  return 0;
 }
 
 char* getSecondElement(const char* str) {

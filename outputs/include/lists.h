@@ -7,7 +7,8 @@ typedef enum {
     FLOAT_TYPE,
     STRING_TYPE,
     DOUBLE_TYPE,
-    BOOL_TYPE
+    BOOL_TYPE,
+    LIST_TYPE
 } DataType;
 
 typedef struct {

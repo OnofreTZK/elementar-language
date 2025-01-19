@@ -31,7 +31,7 @@ SymbolTable* table;
 
 %token <sValue> ID STRING_LITERAL INT FLOAT DOUBLE CHAR_LITERAL
 
-%token TYPE_INT TYPE_VOID CONST TYPE_CHAR TYPE_STRUCT TYPE_STRING TYPE_SHORT 
+%token TYPE_INT TYPE_VOID CONST TYPE_CHAR TYPE_STRUCT TYPE_STRING TYPE_SHORT TYPE_LIST
        TYPE_UNSIGNED_INT TYPE_FLOAT TYPE_DOUBLE TYPE_LONG IF ELSE WHILE RETURN MAIN TYPE_BOOL
        SWITCH FOR CASE BREAK CONTINUE BLOCK_BEGIN BLOCK_END PAREN_OPEN
        PAREN_CLOSE BRACKET_OPEN BRACKET_CLOSE SEMICOLON COMMA DOT EQUALS ASSIGN
@@ -127,6 +127,7 @@ type: TYPE_INT {$$ = createRecord("int","type int");}
     | TYPE_FLOAT BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("DynamicList* ","float[]");}
     | TYPE_BOOL BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("DynamicList* ","bool[]");}
     | TYPE_STRING BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("DynamicList* ","string[]");}
+    | TYPE_LIST BRACKET_OPEN BRACKET_CLOSE {$$ = createRecord("DynamicList* ","list[]");}
     ;
 
 boolean_operator: OR {
@@ -302,8 +303,6 @@ term: STRING_LITERAL {
         char * escope = top(stack);
         char * type = getValue(table, escope, $1);
         char * castCode = getTypeCast(type);
-
-
         char * code = concat(castCode, "getFromList(", $1, ",", $3);
         char * code2 = concat(code, ")", "", "","");
         $$ = createRecord(code2,"array");
@@ -319,12 +318,9 @@ term: STRING_LITERAL {
         //TODO: checar se a variável é um array e que existe
 
         //TODO: checar se o índice é um inteiro
-
         char * escope = top(stack);
         char * type = getValue(table, escope, $1);
         char * castCode = getTypeCast(type);
-
-
         char * code = concat(castCode, "getFromList(", $1, ",", $3);
         char * code2 = concat(code, ")", "", "","");
         $$ = createRecord(code2,"array");
@@ -391,15 +387,9 @@ initialization: type ID ASSIGN expression {
                 char* currentScope = top(stack);
                 char * variableType;
 
-                printf("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n");
-
                 if(strcmp($1->code, "DynamicList* ") == 0) {
-                    printf("É uma lista\n");
-                    printf("%s\n", $1->code);
                     variableType = concat($1->opt1, "", "", "","");
                 } else {
-                    printf("Não é uma lista\n");
-                    printf("%s\n", $1->code);
                     variableType = concat($1->code, "", "", "","");
                 }
 
@@ -971,26 +961,29 @@ function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
 
         } else if(strcmp($1, "addToList") == 0){
 
-            //TODO: checar se o tipo inserido é o mesmo tipo da lista
+            //TODO: checar se o tipo inserido na lista é o mesmo tipo da lista criada
 
             char * secondArgument = getSecondElement($3->code);
+
             if (secondArgument == NULL) {
               //TODO: gerar um erro
               printf("ERROR: The function addToList requires two arguments\n");
 
             } else if(isIdentifier(secondArgument)) { //Se for uma variável, pega o endereço dela
 
-                char * withAdress = concat("&", secondArgument, "", "", "");
+                char * escope = top(stack);
+                char * type = getValue(table, escope, secondArgument);
 
-                printf("THE SECOND ARGUMENT IS: %s\n", secondArgument);
+                char * withAdress;
+
+                if (isListType(type)) {
+                    withAdress = concat(secondArgument, "", "", "", "");
+                } else {
+                    withAdress = concat("&", secondArgument, "", "", "");
+                }
 
                 char * replaced = replace($3->code, secondArgument, withAdress);
-
-                printf("THE REPLACED IS: %s\n", replaced);
-
                 char * code = concat("addToList", "(", replaced, "", ")");
-
-                printf("THE CODE IS: %s\n", code);
 
                 $$ = createRecord(code,"addToList");
                 free(code);

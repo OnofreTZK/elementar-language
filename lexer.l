@@ -25,6 +25,7 @@
 "char"                  {return(TYPE_CHAR);}
 "struct"                {return(TYPE_STRUCT);}
 "string"                {return(TYPE_STRING);}
+"list"                  {return(TYPE_LIST);}
 "if"                    {return(IF);}
 "else"                  {return(ELSE);}
 "while"                 {return(WHILE);}

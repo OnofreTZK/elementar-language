@@ -1,0 +1,37 @@
+int main(){
+
+    int[] inteiros = [];
+    int[] inteiros2 = [];
+    list[] matriz = [];
+    
+    int value1 = 1;
+    int value2 = 2;
+    int value3 = 3;
+    int value4 = 4;
+
+    addToList(inteiros, value1);
+    addToList(inteiros, value2);
+    addToList(inteiros2, value3);
+    addToList(inteiros2, value4);
+
+    addToList(matriz, inteiros);
+    addToList(matriz, inteiros2);
+
+
+    int[] recuperada = matriz[0];
+
+    int[] recuperada2 = matriz[1];
+
+    int valorLista1 = recuperada[0];
+    
+    print("Valor1: ");
+    print(valorLista1);
+    printf("\n");
+
+    int teste = inteiros[0];
+
+    print("Teste: ");
+    print(teste);
+    printf("\n");
+
+};
