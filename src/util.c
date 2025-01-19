@@ -204,16 +204,16 @@ char** stringToParameterList(char* paramList) {
 
     char* token = strtok(inputCopy, ",");
     while (token) {
-        while (*token == ' ') token++; // Remove leading spaces
+        while (*token == ' ') token++;
         char* end = token + strlen(token) - 1;
         while (end > token && (*end == ' ' || *end == '\n' || *end == '\r')) {
-            *end = '\0'; // Remove trailing spaces
+            *end = '\0';
             end--;
         }
 
         char* spacePos = strchr(token, ' ');
         if (spacePos) {
-            *spacePos = '\0'; // Null-terminate to separate type from id
+            *spacePos = '\0';
         }
 
         types[typeCount++] = strdup(token);
