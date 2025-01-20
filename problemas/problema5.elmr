@@ -1,0 +1,19 @@
+void teste(int parametro){
+
+    int valor = parametro - 1;
+
+    print("Valor aqui: ");
+    print(valor);
+    print("\n");
+
+    if (valor > 1){
+        teste(valor);
+    };
+    
+};
+
+int main(){
+
+    print("Vou chamar a recursão");
+    teste(10);
+};
