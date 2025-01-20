@@ -8,6 +8,7 @@
 #include "scope_stack.h"
 #include "symbol_table.h"
 #include "function_table.h"
+#include "user_defined_types_table.h"
 #include "error_checker.h"
 
 int yylex(void);
@@ -24,6 +25,8 @@ extern FILE *yyin;
 Scope* stack;
 SymbolTable* table;
 FunctionTable* userFunctions;
+UserDefinedTypesTable* userStructs;
+
 
 #define FILENAME "./outputs/output.c"
 #define PROGRAM_NAME "./outputs/program"
@@ -1101,6 +1104,7 @@ int main(int argc, char *argv[]) {
     stack = createScopeStack();
     table = createSymbolTable();
     userFunctions = createFunctionTable();
+    userStructs = createUserDefinedTypesTable();
 
     // Global scope
     push("global", &stack);
@@ -1110,6 +1114,7 @@ int main(int argc, char *argv[]) {
     destroyStack(&stack);
     destroySymbolTable(&table);
     destroyFunctionTable(&userFunctions);
+    destroyUserDefinedTypesTable(&userStructs);
 
     fclose(yyin);
     return 0;

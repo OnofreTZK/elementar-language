@@ -5,6 +5,7 @@
 #include "scope_stack.h"
 #include "symbol_table.h"
 #include "function_table.h"
+#include "user_defined_types_table.h"
 #include "util.h"
 
 // Scope Stack tests
@@ -274,10 +275,71 @@ void functionTableSuite(){
 }
 // ************************************************************************************************
 
+// User Defined Types Table tests
+// ************************************************************************************************
+void createUDTTableHasNullStructs(){
+    UserDefinedTypesTable* table = createUserDefinedTypesTable();
+    
+    for(int i = 0; i < 16; i++){
+        assert(table->structs[i].attributes == NULL);
+        assert(table->structs[i].attributesTypes == NULL);
+    }
+    
+    assert(table->length == 0);
+
+    destroyUserDefinedTypesTable(&table);
+}
+void setASingleUDTShouldWork(){
+    UserDefinedTypesTable* table = createUserDefinedTypesTable();
+    char* scope = "global";
+    char* id = "mytypeid";
+    char* name = "mytypename";
+    char* attributes[3] = {"attr1", "attr2", "attr3"};
+    char* attributesTypes[3] = {"int", "int", "string"}; 
+
+    setKeyUserType(&table, scope, id, name, attributes, attributesTypes);
+
+    assert(table->length == 1);
+
+    destroyUserDefinedTypesTable(&table);
+}
+
+void getASingleUDTShouldWork(){
+    UserDefinedTypesTable* table = createUserDefinedTypesTable();
+    char* scope = "global";
+    char* id = "mytypeid";
+    char* name = "mytypename";
+    char* attributes[3] = {"attr1", "attr2", "attr3"};
+    char* attributesTypes[3] = {"int", "int", "string"}; 
+
+    setKeyUserType(&table, scope, id, name, attributes, attributesTypes);
+
+    assert(table->length == 1);
+
+    UserDefinedStruct* func = getStruct(table, scope, id);
+
+    assert(strcmp(func->name, name) == 0);
+
+    for(unsigned int i = 0; i < 3; i++){
+        assert(strcmp(func->attributes[i], attributes[i]) == 0);
+        assert(strcmp(func->attributesTypes[i], attributesTypes[i]) == 0);
+    }
+
+    destroyUserDefinedTypesTable(&table);
+}
+
+void UDTTableSuite(){
+    createUDTTableHasNullStructs();
+    setASingleUDTShouldWork();
+    getASingleUDTShouldWork();
+}
+// ************************************************************************************************
+
 int main() {
     scopeStackSuite();
     symbolTableSuite();
     functionTableSuite();
+    UDTTableSuite();
     
     return 0;
 }
