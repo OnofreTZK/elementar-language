@@ -30,4 +30,17 @@ typedef struct _FunctionTable {
   unsigned int length;
 } FunctionTable ;
 
+typedef struct _UserDefinedStruct {
+  const char* key;
+  char* name;
+  char** attributes;
+  char** attributesTypes;
+} UserDefinedStruct ;
+
+typedef struct _UserDefinedTypesTable {
+  UserDefinedStruct* structs;
+  unsigned int capacity;
+  unsigned int length;
+} UserDefinedTypesTable ;
+
 #endif

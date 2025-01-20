@@ -8,6 +8,7 @@
 #include "scope_stack.h"
 #include "symbol_table.h"
 #include "function_table.h"
+#include "user_defined_types_table.h"
 #include "error_checker.h"
 
 int yylex(void);
@@ -24,6 +25,8 @@ extern FILE *yyin;
 Scope* stack;
 SymbolTable* table;
 FunctionTable* userFunctions;
+UserDefinedTypesTable* userStructs;
+
 
 #define FILENAME "./outputs/output.c"
 #define PROGRAM_NAME "./outputs/program"
@@ -66,7 +69,6 @@ FunctionTable* userFunctions;
 %%
 
 program: statement_list SEMICOLON {
-            printf("program\n");
             char * includes = concat(
                 "#include <stdio.h>\n", 
                 "#include <string.h>\n", 
@@ -139,63 +141,49 @@ type: TYPE_INT {$$ = createRecord("int","type int");}
     ;
 
 boolean_operator: OR {
-                    printf("OR\n");
                     $$ = createRecord("||","operator");
                 }
                 | AND {
-                    printf("AND\n");
                     $$ = createRecord("&&","operator");
                 }
                 ;
 
 relational_operator: EQUALS {
-                        printf("EQUALS\n");
                         $$ = createRecord("==","operator");
                     }
                     | NOT_EQUAL {
-                        printf("NOT_EQUAL\n");
                         $$ = createRecord("!=","operator");
                    }
                     | LESS_THAN {
-                        printf("LESS_THAN\n");
                         $$ = createRecord("<","operator");
                    }
                     | LESS_EQUAL {
-                        printf("LESS_EQUAL\n");
                         $$ = createRecord("<=","operator");
                    }
                     | GREATER_THAN {
-                        printf("GREATER_THAN\n");
                         $$ = createRecord(">","operator");
                    }
                     | GREATER_EQUAL {
-                        printf("GREATER_EQUAL\n");
                         $$ = createRecord(">=","operator");
                    }
                    ;
 
 arithmetic_operator: PLUS {
-                    printf("PLUS\n");
                     $$ = createRecord("+","operator");
                 }
                 | MINUS{
-                    printf("MINUS\n");
                     $$ = createRecord("-","operator");
                 }
                 | MULTIPLY {
-                    printf("MULTIPLY\n");
                     $$ = createRecord("*","operator");
                 }
                 | DIVIDE {
-                    printf("DIVIDE\n");
                     $$ = createRecord("/","operator");
                 }
                 | MODULO {
-                    printf("MODULO\n");
                     $$ = createRecord("%","operator");
                 }
                 | EXPONENT {
-                    printf("EXPONENT\n");
                     $$ = createRecord("^","exponent");
                 }
                 ;
@@ -1095,14 +1083,13 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Inicializa a variável global filename
     filename = input_file;
 
     stack = createScopeStack();
     table = createSymbolTable();
     userFunctions = createFunctionTable();
+    userStructs = createUserDefinedTypesTable();
 
-    // Global scope
     push("global", &stack);
 
     yyparse();  
@@ -1110,6 +1097,7 @@ int main(int argc, char *argv[]) {
     destroyStack(&stack);
     destroySymbolTable(&table);
     destroyFunctionTable(&userFunctions);
+    destroyUserDefinedTypesTable(&userStructs);
 
     fclose(yyin);
     return 0;
