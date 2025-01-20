@@ -533,85 +533,101 @@ arithmetic_expression: unary_expression {
                         $$ = createRecord($1->code, $1->opt1);
                         freeRecord($1);
                     }
-                    | arithmetic_expression arithmetic_operator unary_expression {
+| arithmetic_expression arithmetic_operator unary_expression {
 
-                        //TODO: não permitir divisão entre inteiros. Tem que converter antes para float ou double
-                        //TODO: não permitir tipos diferentes
+    printf("XXXXXXXXXXXXXXXXXXXXXXXx\n");
+    printf("Type of the unary expression: %s\n", $3->opt1);
+    printf("Code: %s\n", $3->code);
 
-                        printf("XXXXXXXXXXXXXXXXXXXXXXXx\n");
-                        printf("Type of the unary expression: %s\n", $3->opt1);
-                        printf("Code: %s\n", $3->code);
+    char *type = NULL;
 
-                        char * type;
+    if (strcmp($3->opt1, "id") == 0) {
+        printf("Era um id\n");
+        char *currentScope = top(stack);
 
-                        if(strcmp($1->opt1, "id") == 0){
-                            printf("Era um id\n");
-                            char* currentScope = top(stack);
-                            type = getValue(table, currentScope, $3->code);
-                            
-                            printf("type recebido: %s\n", type);
-                        } else {
-                            type = $1->opt1;
-                        }
+        if (!currentScope) {
+            fprintf(stderr, "Erro: Escopo atual não encontrado.\n");
+            exit(1); // Falha grave, encerra o programa
+        }
 
-                        printf("Type after checking ids expression: %s\n", type);
+        printf("DEBUG: Verificando variável '%s' no escopo '%s'.\n", $3->code, currentScope);
 
-                      
-                        if (strcmp(type, "float") == 0 && strcmp($2->code, "^") == 0) {
+        // Verifica se $3->code é um identificador válido
+        if (!isIdentifier($3->code)) {
+            fprintf(stderr, "Erro: '%s' não é um identificador válido.\n", $3->code);
+            exit(1); // Falha grave, encerra o programa
+        }
 
-                            char * code = concat("powf(", $1->code, ",", $3->code, ")");
-                            printf("arithmetic_expression (float pow): %s\n", code);
+        type = getValue(table, currentScope, $3->code);
 
-                            $$ = createRecord(code,"float");
-                            free(code);
+        if (!type) {
+            fprintf(stderr, "Erro: Variável '%s' não encontrada no escopo '%s'.\n", $3->code, currentScope);
+            exit(1); // Falha grave, encerra o programa
+        }
 
-                        } else if (strcmp(type, "double") == 0 && strcmp($2->code, "^")  == 0) {
+        printf("type recebido: %s\n", type);
 
-                            char * code = concat("pow(", $1->code, ",", $3->code, ")");
-                            printf("arithmetic_expression (double pow): %s\n", code);
+    } else if (strcmp($3->opt1, "int") == 0 || strcmp($3->opt1, "float") == 0) {
+        // Trata literais diretamente com base no tipo
+        printf("Literal detectado: %s\n", $3->code);
+        type = $3->opt1;
+    } else {
+        fprintf(stderr, "Erro: Tipo desconhecido em expressão aritmética.\n");
+        exit(1);
+    }
 
-                            $$ = createRecord(code,$3->opt1);
-                            free(code);
+    printf("Type after checking ids expression: %s\n", type);
 
-                        } else if(strcmp(type, "string") == 0 && strcmp($3->opt1, "string") == 0) {
+    if (strcmp(type, "float") == 0 && strcmp($2->code, "^") == 0) {
+        char *code = concat("powf(", $1->code, ",", $3->code, ")");
+        printf("arithmetic_expression (float pow): %s\n", code);
 
-                            // TODO: checar se o operador é soma. Do contrário gerar erro
-                            // TODO: ver o que acontece quando algum dos lados for uma chamada de função ou id
+        $$ = createRecord(code, "float");
+        free(code);
 
-                            char * code = concat("concat(", $1->code, ",", $3->code, ")");
-                            $$ = createRecord(code,"string");
-                            free(code);
+    } else if (strcmp(type, "double") == 0 && strcmp($2->code, "^") == 0) {
+        char *code = concat("pow(", $1->code, ",", $3->code, ")");
+        printf("arithmetic_expression (double pow): %s\n", code);
 
-                        } else if(strcmp(type, "float") == 0 && strcmp($3->opt1, "float") == 0) {
+        $$ = createRecord(code, $3->opt1);
+        free(code);
 
-                            char * code = concat("(float)", $1->code, $2->code, $3->code, "");
-                            $$ = createRecord(code,"float");
-                            free(code);
+    } else if (strcmp(type, "string") == 0 && strcmp($3->opt1, "string") == 0) {
+        // TODO: checar se o operador é soma. Do contrário gerar erro
+        // TODO: ver o que acontece quando algum dos lados for uma chamada de função ou id
 
-                        } else if(strcmp(type, "double") == 0 && strcmp($3->opt1, "double") == 0) {
+        char *code = concat("concat(", $1->code, ",", $3->code, ")");
+        $$ = createRecord(code, "string");
+        free(code);
 
-                            char * code = concat("(double)", $1->code, $2->code, $3->code, "");
-                            $$ = createRecord(code,"double");
-                            free(code);
-                        } else {
+    } else if (strcmp(type, "float") == 0 && strcmp($3->opt1, "float") == 0) {
+        char *code = concat("(float)", $1->code, $2->code, $3->code, "");
+        $$ = createRecord(code, "float");
+        free(code);
 
-                           
-                            char * code = concat($1->code, $2->code, $3->code, "", "");
-                            printf("arithmetic_expression 42: %s\n", code);
+    } else if (strcmp(type, "double") == 0 && strcmp($3->opt1, "double") == 0) {
+        char *code = concat("(double)", $1->code, $2->code, $3->code, "");
+        $$ = createRecord(code, "double");
+        free(code);
 
-                            $$ = createRecord(code,$3->opt1);
-                            free(code);
+    } else {
+        char *code = concat($1->code, $2->code, $3->code, "", "");
+        printf("arithmetic_expression 42: %s\n", code);
 
-                        }
+        $$ = createRecord(code, $3->opt1);
+        free(code);
+    }
 
-                        // Checar se é soma de 2 strings. Se for, usar strcat
+    // Checar se é soma de 2 strings. Se for, usar strcat
 
-                        freeRecord($1);
-                        freeRecord($2);
-                        freeRecord($3);
-                       
-                    }
-                    ;
+    freeRecord($1);
+    freeRecord($2);
+    freeRecord($3);
+}
+;
+
+
+
 
 relational_expression: arithmetic_expression {
                       

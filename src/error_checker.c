@@ -53,7 +53,6 @@ void check_array_initialization(const char *name, const char *type, const char *
     }
 }
 
-
 void check_array_declaration(const char *name, const char *type, int line, int column) {
     const char *currentScope = top(stack);
 
@@ -70,7 +69,7 @@ void check_array_declaration(const char *name, const char *type, int line, int c
         return;
     }
 
-    // Adiciona o array à tabela de símbolos (usando cast para char*)
+    // Adiciona o array à tabela de símbolos
     setKeyValue(&table, (char*)currentScope, (char*)name, (char*)type);
 }
 
@@ -84,6 +83,7 @@ void check_array_access(const char *name, const char *indexType, int line, int c
     }
 }
 
+
 void check_array_operation(const char *name, const char *operationType, int line, int column) {
     // Exemplo: Verifica se a operação é válida para o tipo do array
     if (strcmp(operationType, "add") == 0 && strcmp(name, "DynamicList*") != 0) {
@@ -96,17 +96,31 @@ void check_array_operation(const char *name, const char *operationType, int line
 
 // Adiciona um símbolo ao escopo atual
 void add_symbol_to_scope(const char *name, const char *type, int line, int column) {
-    // Verifica se 'name' é uma palavra-chave reservada (como 'int' ou 'float')
+    if (!name || !type) {
+        fprintf(stderr, "Erro interno: Nome ou tipo inválido ao adicionar símbolo ao escopo.\n");
+        return;
+    }
+
     const char *reserved_keywords[] = {"int", "float", "char", "string", "bool", "double", "void", NULL};
     for (int i = 0; reserved_keywords[i] != NULL; i++) {
         if (strcmp(name, reserved_keywords[i]) == 0) {
-            // Não adiciona palavras-chave à tabela de símbolos
+            fprintf(stderr, "Erro: '%s' é uma palavra-chave reservada e não pode ser usado como identificador.\n", name);
             return;
         }
     }
 
-    const char *current_scope = top(stack);
+    if (!stack) {
+        fprintf(stderr, "Erro interno: Pilha de escopos não inicializada.\n");
+        return;
+    }
 
+    const char *current_scope = top(stack);
+    if (!current_scope) {
+        fprintf(stderr, "Erro interno: Escopo atual não encontrado.\n");
+        return;
+    }
+
+    // Verifica se o símbolo já foi declarado no escopo atual
     if (is_symbol_in_scope(name)) {
         char msg[256];
         snprintf(msg, sizeof(msg), "Variável '%s' redeclarada no escopo '%s'.", name, current_scope);
@@ -114,8 +128,10 @@ void add_symbol_to_scope(const char *name, const char *type, int line, int colum
         return;
     }
 
-    setKeyValue(&table, (char *)current_scope, (char *)name, type);
+    setKeyValue(&table, (char *)current_scope, (char *)name, (char *)type);
+    printf("DEBUG: Símbolo '%s' do tipo '%s' adicionado ao escopo '%s'.\n", name, type, current_scope);
 }
+
 
 int is_symbol_in_scope(const char *name) {
     const char *current_scope = top(stack);
@@ -125,10 +141,24 @@ int is_symbol_in_scope(const char *name) {
 
 
 
-// Obtém o tipo de um símbolo no escopo atual
 const char *get_symbol_type_in_scope(const char *name) {
+    if (!stack) {
+        fprintf(stderr, "Erro interno: Pilha de escopos não inicializada.\n");
+        return NULL;
+    }
+
     const char *current_scope = top(stack);
-    return (const char *)getValue(table, (char *)current_scope, (char *)name);
+    if (!current_scope) {
+        fprintf(stderr, "Erro interno: Escopo atual não encontrado.\n");
+        return NULL;
+    }
+
+    const char *type = (const char *)getValue(table, (char *)current_scope, (char *)name);
+    if (!type) {
+        fprintf(stderr, "Erro: Símbolo '%s' não encontrado no escopo '%s'.\n", name, current_scope);
+    }
+
+    return type;
 }
 
 // Verifica erros de tipo em retorno de função
