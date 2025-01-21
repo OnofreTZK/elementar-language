@@ -1,14 +1,16 @@
 int mdc(int n, int m){
     int r;
+    int mn = m % n
+    int nm = n % m
 
-    if (m % n == 0) {
+    if (mn =? 0) {
         return r = n;
-    } else if (n % m == 0) {
+    } else if (nm =? 0) {
         return r = m
     } else if (m > n) {
-        mdc(n, m % n, r);
+        mdc(n, mn, r);
     } else {
-        mdc(m, n % m, r);
+        mdc(m, nm, r);
     }
 }
 
