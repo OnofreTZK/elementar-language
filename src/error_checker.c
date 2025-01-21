@@ -129,13 +129,11 @@ void add_symbol_to_scope(const char *name, const char *type, int line, int colum
     }
 
     setKeyValue(&table, (char *)current_scope, (char *)name, (char *)type);
-    printf("DEBUG: Símbolo '%s' do tipo '%s' adicionado ao escopo '%s'.\n", name, type, current_scope);
 }
 
 
 int is_symbol_in_scope(const char *name) {
     const char *current_scope = top(stack);
-    printf("DEBUG: Verificando se '%s' está no escopo '%s'.\n", name, current_scope);
     return getValue(table, (char *)current_scope, (char *)name) != NULL;
 }
 
@@ -269,7 +267,6 @@ void enter_scope(const char *scope_name) {
         exit(1);
     }
     push((char *)scope_name, &stack);
-    printf("DEBUG: Entrando no escopo '%s'.\n", scope_name);
 }
 
 
@@ -279,7 +276,6 @@ void exit_scope() {
         exit(1);
     }
     const char *scope_name = top(stack);
-    printf("DEBUG: Saindo do escopo '%s'.\n", scope_name);
     pop(&stack);
 }
 
