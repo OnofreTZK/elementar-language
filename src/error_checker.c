@@ -254,12 +254,15 @@ void check_increment(const char *type, int line, int column) {
 
 // Verifica operações aritméticas
 void check_arithmetic_operation(const char *op, const char *type1, const char *type2, int line, int column) {
-    if (strcmp(type1, "int") != 0 || strcmp(type2, "int") != 0) {
+    if ((strcmp(type1, "int") != 0 && strcmp(type1, "float") != 0 && strcmp(type1, "double") != 0) ||
+        (strcmp(type2, "int") != 0 && strcmp(type2, "float") != 0 && strcmp(type2, "double") != 0) ||
+        strcmp(type1, type2) != 0) {
         char msg[256];
-        snprintf(msg, sizeof(msg), "Operação '%s' só é permitida para variáveis do tipo 'int'.", op);
+        snprintf(msg, sizeof(msg), "Operação '%s' só é permitida entre variáveis do mesmo tipo ('int', 'float' ou 'double').", op);
         report_error(msg, line, column);
     }
 }
+
 
 void enter_scope(const char *scope_name) {
     if (!stack) {
