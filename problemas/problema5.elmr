@@ -1,19 +1,20 @@
-void teste(int parametro){
+int mdc(int n, int m){
+    int r;
+    int mn = m % n
+    int nm = n % m
 
-    int valor = parametro - 1;
-
-    print("Valor aqui: ");
-    print(valor);
-    print("\n");
-
-    if (valor > 1){
-        teste(valor);
-    };
-    
-};
+    if (mn =? 0) {
+        return r = n;
+    } else if (nm =? 0) {
+        return r = m
+    } else if (m > n) {
+        mdc(n, mn, r);
+    } else {
+        mdc(m, nm, r);
+    }
+}
 
 int main(){
-
-    print("Vou chamar a recursão");
-    teste(10);
+    int r = mdc(3, 6);
+    print(r);
 };

@@ -515,24 +515,27 @@ arithmetic_expression: unary_expression {
     char *type = NULL;
 
     if (strcmp($3->opt1, "id") == 0) {
-        char *currentScope = top(stack);
-
-        if (!currentScope) {
-            fprintf(stderr, "Erro: Escopo atual não encontrado.\n");
-            exit(1); // Falha grave, encerra o programa
-        }
-
         // Verifica se $3->code é um identificador válido
         if (!isIdentifier($3->code)) {
             fprintf(stderr, "Erro: '%s' não é um identificador válido.\n", $3->code);
             exit(1); // Falha grave, encerra o programa
         }
+        
+        unsigned int pos = stack->position;
+        while(pos >= 0) {
+            char* currentScopeV2 = peek(stack, pos);
+            type = getValue(table, currentScopeV2, $3->code);
 
-        type = getValue(table, currentScope, $3->code);
-
-        if (!type) {
-            fprintf(stderr, "Erro: Variável '%s' não encontrada no escopo '%s'.\n", $3->code, currentScope);
-            exit(1); // Falha grave, encerra o programa
+            if(strcmp(type, "") != 0){
+                break;
+            }
+           
+            pos--;
+        }
+ 
+        if (strcmp(type, "") == 0) {
+            fprintf(stderr, "Erro: Variável não declarada.\n");
+            exit(1); 
         }
 
     } else if (strcmp($3->opt1, "int") == 0 || strcmp($3->opt1, "float") == 0) {
@@ -587,9 +590,6 @@ arithmetic_expression: unary_expression {
     freeRecord($3);
 }
 ;
-
-
-
 
 relational_expression: arithmetic_expression {
                       
@@ -842,8 +842,6 @@ function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statem
             free(code2);
         }
         ;   
-
-
 
 argument_list: /* epsilon */  {
                 //printf("argument_list\n");
