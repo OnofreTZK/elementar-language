@@ -53,10 +53,8 @@ char * pop(Scope** stack) {
 
 char* top(Scope* stack){
     if(!stack){
-        printf("DEBUG: Pilha de escopos vazia.\n");
         return "";
     } 
-    printf("DEBUG: Escopo atual: %s\n", stack->label);
     return stack->label;
 }
 

@@ -113,12 +113,10 @@ program: statement_list SEMICOLON {
 
 statement_list: statement {
                 $$ = createRecord($1->code,"");
-                printf("statement_list: %s\n", $1->code);
                 freeRecord($1);
             }
             | statement_list SEMICOLON statement {
                 char * code = concat($1->code, ";\n", $3->code, "", "");
-                printf("statement_list 2: %s\n", code);
                 $$ = createRecord(code,"");
                 freeRecord($1);
                 freeRecord($3);
@@ -190,18 +188,14 @@ arithmetic_operator: PLUS {
 
 statement: declaration {
                 $$ = createRecord($1->code,"declaration");
-                printf("declaration: %s\n", $1->code);
                 freeRecord($1);
             }
             | initialization {
                 $$ = createRecord($1->code,"");
-                printf("initialization: %s\n", $1->code);
                 freeRecord($1);
             }
             | assignment {
                 $$ = createRecord($1->code,$1->code);
-                printf("assignment: %s\n", $1->code);
-                printf("dado aqui no declaration: %s\n", $1->opt1);
                 freeRecord($1);
             }
             | main {
@@ -329,8 +323,6 @@ term: STRING_LITERAL {
     ;                
 
 declaration: type ID {
-    printf("VAR Declaration\n");
-
     // Checa se a variável já foi declarada no escopo atual
     check_variable_declaration($2, yylineno, yycolumn);
 
@@ -338,12 +330,8 @@ declaration: type ID {
 
     // Determina o tipo da variável
     if (strcmp($1->code, "DynamicList* ") == 0) {
-        printf("É uma lista\n");
-        printf("%s\n", $1->code);
         variableType = concat($1->opt1, "", "", "", "");
     } else {
-        printf("Não é uma lista\n");
-        printf("%s\n", $1->code);
         variableType = concat($1->code, "", "", "", "");
     }
 
@@ -354,7 +342,6 @@ declaration: type ID {
     // Geração de código
     if (strcmp($1->opt1, "type string") == 0) { 
         char* code = concat($1->code, " * ", $2, "", "");
-        printf("declaration: %s\n", code);
         $$ = createRecord(code, "");
         free(code);
     } else {
@@ -369,7 +356,6 @@ declaration: type ID {
 
 
 initialization: type ID ASSIGN expression {
-                printf("VAR Initialization \n");
                 //TODO: checar aqui se a variável já foi declarada
                 check_variable_declaration($2, yylineno, yycolumn);
 
@@ -447,8 +433,6 @@ initialization: type ID ASSIGN expression {
                 } else {
                     $$ = createRecord(code2,"");
                 }
-
-                printf("initialization: %s\n", code2);
                 
                 //free(code);
                 free(code2);
@@ -459,13 +443,10 @@ initialization: type ID ASSIGN expression {
 
 
 assignment: ID ASSIGN expression {
-                printf("Assignment\n");
                 
                 char* currentScope = top(stack);
 
                 char* type = getValue(table, currentScope, $1);
-
-                printf("THE TYPE IS: %s\n", type);
 
                 //Coloca a variável que vai receber o valor do input
                 if(strcmp($3->opt1, "input") == 0) {
@@ -480,7 +461,6 @@ assignment: ID ASSIGN expression {
                 freeRecord($3);               
             }
             | ID BRACKET_OPEN INT BRACKET_CLOSE ASSIGN expression {
-                printf("ATRIBUIÇÃO DE LISTA\n");
                 char* currentScope = top(stack);
 
                 char* type = getValue(table, currentScope, $1);
@@ -509,7 +489,6 @@ unary_expression: term {
                     //printf("term increment: %s\n", $1->code);
                   
                     char * code = concat($1->code, "++", "", "", "");
-                    printf("codigo: %s\n", code);
 
                     $$ = createRecord(code,$1->opt1);
                     freeRecord($1);
@@ -528,29 +507,20 @@ unary_expression: term {
                 ;
 
 arithmetic_expression: unary_expression {
-                        printf("unary_expression\n");
 
                         $$ = createRecord($1->code, $1->opt1);
                         freeRecord($1);
                     }
 | arithmetic_expression arithmetic_operator unary_expression {
-
-    printf("XXXXXXXXXXXXXXXXXXXXXXXx\n");
-    printf("Type of the unary expression: %s\n", $3->opt1);
-    printf("Code: %s\n", $3->code);
-
     char *type = NULL;
 
     if (strcmp($3->opt1, "id") == 0) {
-        printf("Era um id\n");
         char *currentScope = top(stack);
 
         if (!currentScope) {
             fprintf(stderr, "Erro: Escopo atual não encontrado.\n");
             exit(1); // Falha grave, encerra o programa
         }
-
-        printf("DEBUG: Verificando variável '%s' no escopo '%s'.\n", $3->code, currentScope);
 
         // Verifica se $3->code é um identificador válido
         if (!isIdentifier($3->code)) {
@@ -565,29 +535,22 @@ arithmetic_expression: unary_expression {
             exit(1); // Falha grave, encerra o programa
         }
 
-        printf("type recebido: %s\n", type);
-
     } else if (strcmp($3->opt1, "int") == 0 || strcmp($3->opt1, "float") == 0) {
         // Trata literais diretamente com base no tipo
-        printf("Literal detectado: %s\n", $3->code);
         type = $3->opt1;
     } else {
         fprintf(stderr, "Erro: Tipo desconhecido em expressão aritmética.\n");
         exit(1);
     }
 
-    printf("Type after checking ids expression: %s\n", type);
-
     if (strcmp(type, "float") == 0 && strcmp($2->code, "^") == 0) {
         char *code = concat("powf(", $1->code, ",", $3->code, ")");
-        printf("arithmetic_expression (float pow): %s\n", code);
 
         $$ = createRecord(code, "float");
         free(code);
 
     } else if (strcmp(type, "double") == 0 && strcmp($2->code, "^") == 0) {
         char *code = concat("pow(", $1->code, ",", $3->code, ")");
-        printf("arithmetic_expression (double pow): %s\n", code);
 
         $$ = createRecord(code, $3->opt1);
         free(code);
@@ -612,7 +575,6 @@ arithmetic_expression: unary_expression {
 
     } else {
         char *code = concat($1->code, $2->code, $3->code, "", "");
-        printf("arithmetic_expression 42: %s\n", code);
 
         $$ = createRecord(code, $3->opt1);
         free(code);
@@ -632,12 +594,10 @@ arithmetic_expression: unary_expression {
 relational_expression: arithmetic_expression {
                       
                         $$ = createRecord($1->code,$1->opt1);
-                        printf("arithmetic_expression: %s\n", $1->code);
                         freeRecord($1);
                     }
                     | relational_expression relational_operator arithmetic_expression {
                         char * code = concat($1->code, $2->code, $3->code, "", "");
-                        printf("relational_expression: %s\n", code);
                         $$ = createRecord(code,$3->opt1);
                         freeRecord($1);
                         freeRecord($2);
@@ -648,12 +608,10 @@ relational_expression: arithmetic_expression {
 
 boolean_expression: relational_expression {
                         $$ = createRecord($1->code, $1->opt1);
-                        printf("relational_expression: %s\n", $1->code);
                         freeRecord($1);
                     }
                     | boolean_expression boolean_operator relational_expression {
                         char * code = concat($1->code, $2->code, $3->code, "", "");
-                        printf("boolean_expression 1: %s\n", code);
                         $$ = createRecord(code,$3->opt1);
                         freeRecord($1);
                         freeRecord($2);
@@ -662,7 +620,6 @@ boolean_expression: relational_expression {
                     }
                     | NOT boolean_expression {
                         char * code = concat("!", $2->code, "", "", "");
-                        printf("boolean_expression 2: %s\n", code);
                         $$ = createRecord(code,$2->opt1);
                         freeRecord($2);
                         free(code);
@@ -691,7 +648,6 @@ expression: PAREN_OPEN expression PAREN_CLOSE {
         ;
 
 main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement {
-            printf("main\n");
             push("main", &stack);
 
             char * code = concat($1->code, " main", "(int argc, char *argv[])\n", $5->code, "");
@@ -703,7 +659,6 @@ main: type MAIN PAREN_OPEN PAREN_CLOSE block_statement {
         ;
 
 if_statement: IF PAREN_OPEN expression PAREN_CLOSE block_statement {
-            printf("if_statement\n");
 
             char *label_if = generateLabel("if_block");
             char *label_end = generateLabel("end_if");
@@ -725,7 +680,6 @@ if_statement: IF PAREN_OPEN expression PAREN_CLOSE block_statement {
             free(code4);
         }
         | IF PAREN_OPEN expression PAREN_CLOSE block_statement ELSE block_statement {
-            printf("if_else_statement\n");
 
             char *label_if = generateLabel("if_block");
             char *label_else = generateLabel("else_block");
@@ -756,7 +710,6 @@ if_statement: IF PAREN_OPEN expression PAREN_CLOSE block_statement {
         ;
 
 while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement {
-    printf("while_statement\n");
 
     char *label_start = generateLabel("while_start_");
     char *label_end = generateLabel("while_end_");
@@ -769,8 +722,6 @@ while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement {
     char *code2 = concat(code, label_end, ";\n", "", "");
     char *code3 = concat(code2, treated_block_code2, "\ngoto ", label_start, ";\n");
     char *code4 = concat(code3, label_end, ":\n", "", "");
-
-    printf("while_statement: %s\n", code4);
 
     $$ = createRecord(code4, "while_statement");
 
@@ -788,7 +739,6 @@ while_statement: WHILE PAREN_OPEN expression PAREN_CLOSE block_statement {
 ;
 
 for_statement: FOR PAREN_OPEN for_initializer SEMICOLON expression SEMICOLON for_increment PAREN_CLOSE block_statement {
-    printf("for_statement\n");
 
     char *label_start = generateLabel("for_start");
     char *label_body = generateLabel("for_body");
@@ -857,11 +807,9 @@ for_increment: ID INCREMENT {
             ;
 
 parameter_list: /* epsilon */ {
-                printf("parameter_list\n");
                 $$ = createRecord("","parameter_list");
             }
             | parameter_list_nonempty {
-                printf("parameter_list\n");
                 $$ = createRecord($1->code,"");
                 freeRecord($1);
             }
@@ -869,7 +817,6 @@ parameter_list: /* epsilon */ {
 
 parameter_list_nonempty: type ID {
                 char * code = concat($1->code, " ", $2, "", "");
-                printf("parameter_list_nonempty: %s\n", code);
                 $$ = createRecord(code,"");
                 freeRecord($1);
                 free(code);
@@ -877,7 +824,6 @@ parameter_list_nonempty: type ID {
             |
             type ID COMMA parameter_list_nonempty {
                 char * code = concat($1->code, " ", $2, ",", $4->code);
-                printf("parameter_list_nonempty: %s\n", code);
                 $$ = createRecord(code,"");
                 freeRecord($1);
                 freeRecord($4);
@@ -886,7 +832,6 @@ parameter_list_nonempty: type ID {
             ;
              
 function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement {
-            printf("function_declaration\n");
             char * code = concat($1->code, " ", $2, "(", $4->code);
             char * code2 = concat(code, ")", $6->code, "", "");
             $$ = createRecord(code2,"");
@@ -926,8 +871,6 @@ argument_list_nonempty: term  {
         }
 
 function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
-        printf("function_call\n");
-        
         if(strcmp($1, "print") == 0) { 
 
             char* currentScope = top(stack);
@@ -937,10 +880,6 @@ function_call: ID PAREN_OPEN argument_list PAREN_CLOSE {
             //TODO: se variável não existir, retornar um erro!
 
             //printTable(table);
-
-            printf("THE CURRENT SCOPE IS %s\n", currentScope);
-            printf("THE TYPE IS: %s\n", type);
-
             char * code;
 
             if(strcmp($3->opt1, "id") == 0){
