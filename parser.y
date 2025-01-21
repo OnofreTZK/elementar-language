@@ -832,6 +832,7 @@ parameter_list_nonempty: type ID {
             ;
              
 function_declaration: type ID PAREN_OPEN parameter_list PAREN_CLOSE block_statement {
+            push($2, &stack);
             char * code = concat($1->code, " ", $2, "(", $4->code);
             char * code2 = concat(code, ")", $6->code, "", "");
             $$ = createRecord(code2,"");
